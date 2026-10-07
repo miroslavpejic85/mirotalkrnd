@@ -84,6 +84,29 @@ function trimString(value) {
     return value?.trim() || '';
 }
 
+function parseTrustProxy(value) {
+    if (value === undefined) {
+        return false;
+    }
+
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (normalizedValue === 'true' || normalizedValue === '1') {
+        return true;
+    }
+
+    if (normalizedValue === 'false' || normalizedValue === '0') {
+        return false;
+    }
+
+    const parsedNumber = Number.parseInt(value, 10);
+    if (Number.isInteger(parsedNumber) && parsedNumber >= 0 && String(parsedNumber) === value.trim()) {
+        return parsedNumber;
+    }
+
+    return value.trim();
+}
+
 function createRuntimeConfig(env) {
     const port = env.PORT || 4010;
     const nodeEnv = env.NODE_ENV?.trim() || DEFAULT_NODE_ENV;
@@ -99,6 +122,7 @@ function createRuntimeConfig(env) {
     const ogUrl = trimString(env.OG_URL);
     const twitterCard = trimString(env.TWITTER_CARD) || 'summary_large_image';
     const useHttps = nodeEnv === 'production' ? true : parseBoolean(env.USE_HTTPS, false);
+    const trustProxy = parseTrustProxy(env.TRUST_PROXY);
     const sslKeyPath = trimString(env.SSL_KEY_PATH) || './ssl/key.pem';
     const sslCertPath = trimString(env.SSL_CERT_PATH) || './ssl/cert.pem';
     const maxActiveUsers = getOptionalPositiveInteger(Number.parseInt(env.MAX_ACTIVE_USERS ?? '200', 10));
@@ -164,6 +188,7 @@ function createRuntimeConfig(env) {
             twitterCard,
         },
         useHttps,
+        trustProxy,
         sslKeyPath,
         sslCertPath,
         rtcConfig: {

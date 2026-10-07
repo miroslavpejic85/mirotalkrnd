@@ -21,11 +21,13 @@ const {
     offlineMessage,
     socialMeta,
     useHttps,
+    trustProxy,
     sslKeyPath,
     sslCertPath,
     rtcConfig,
     limits,
 } = runtimeConfig;
+app.set('trust proxy', trustProxy);
 const { apiRateLimitWindowMs, apiRateLimitMaxRequests } = limits;
 const apiRateLimiter =
     apiRateLimitWindowMs && apiRateLimitMaxRequests

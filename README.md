@@ -63,6 +63,8 @@ The installer supports:
 
 Edit `.env` for your needs use [.env.template](.env.template) as reference, then restart the server.
 
+If you run behind a reverse proxy (for example Nginx), set `TRUST_PROXY=1` (or `true`) so rate limiting uses the real client IP from `X-Forwarded-For`.
+
 ## 📚 Documentation
 
 - [Configurations](https://docs.mirotalk.com/mirotalk-rnd/configurations/)
