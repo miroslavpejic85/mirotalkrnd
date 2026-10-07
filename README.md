@@ -1,7 +1,9 @@
 <h1 align="center">MiroTalk RND</h1>
 
 <p align="center">
-  <img src="./public/images/social/og-image.png" alt="MiroTalk RND" width="720" />
+  <a href="https://rnd.mirotalk.com">
+    <img src="./public/images/social/og-image.png" alt="MiroTalk RND" width="720" />
+  </a>
 </p>
 
 <p align="center"><em>Meet someone random. Talk instantly.</em></p>
@@ -9,10 +11,11 @@
 <p align="center">Random 1-on-1 video chat built with Node.js, Socket.IO, and WebRTC.</p>
 
 <p align="center">
+  <a href="https://rnd.mirotalk.com">Live demo</a> •
   <a href="#-what-it-does">Features</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-docker">Docker</a> •
-  <a href="#-configuration-env">Configuration</a>
+  <a href="#configuration-env">Configuration</a>
 </p>
 
 ---
@@ -62,6 +65,8 @@ The installer supports:
 
 - Docker setup (with official image `mirotalk/rnd:latest` or local build)
 - Local Node.js setup
+
+<a id="configuration-env"></a>
 
 ## ⚙️ Configuration (`.env`)
 
