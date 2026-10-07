@@ -130,9 +130,13 @@ export function updateMediaButtons(el, state) {
     el.muteBtn.title = state.isMuted ? 'Unmute microphone' : 'Mute microphone';
     el.cameraBtn.title = state.isCameraOff ? 'Turn camera on' : 'Turn camera off';
     el.hideSelfBtn.title = state.selfPreviewHidden ? 'Show my preview' : 'Hide my preview';
-    el.muteBtn.setAttribute('aria-label', el.muteBtn.title);
-    el.cameraBtn.setAttribute('aria-label', el.cameraBtn.title);
-    el.hideSelfBtn.setAttribute('aria-label', el.hideSelfBtn.title);
+    // Stable labels + aria-pressed: screen readers announce the state once instead of a changing label
+    el.muteBtn.setAttribute('aria-label', 'Mute microphone');
+    el.cameraBtn.setAttribute('aria-label', 'Turn off camera');
+    el.hideSelfBtn.setAttribute('aria-label', 'Hide my preview');
+    el.muteBtn.setAttribute('aria-pressed', String(state.isMuted));
+    el.cameraBtn.setAttribute('aria-pressed', String(state.isCameraOff));
+    el.hideSelfBtn.setAttribute('aria-pressed', String(state.selfPreviewHidden));
     el.muteBtn.setAttribute('data-tippy-content', el.muteBtn.title);
     el.cameraBtn.setAttribute('data-tippy-content', el.cameraBtn.title);
     el.hideSelfBtn.setAttribute('data-tippy-content', el.hideSelfBtn.title);

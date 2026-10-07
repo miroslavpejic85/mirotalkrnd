@@ -540,10 +540,18 @@ body {
     color: #fff;
 }
 
+/* Muted/off state: tinted red so the solid-red End button stays the only destructive action */
 .icon-btn.off {
-    background: rgba(239, 68, 68, 0.16);
-    border-color: rgba(239, 68, 68, 0.45);
-    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #fecaca;
+}
+
+/* Hiding the self preview is a preference, not a problem: keep it neutral instead of red */
+#hideSelfBtn.off {
+    background: rgba(124, 140, 255, 0.16);
+    border-color: rgba(124, 140, 255, 0.45);
+    color: #c7ceff;
 }
 
 .app-footer {
