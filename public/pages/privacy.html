@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{APP_NAME}} | Privacy Policy</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="stylesheet" href="/css/legal.css" />
+    </head>
+    <body>
+        <main>
+            <h1>Privacy Policy</h1>
+            <p>Last updated: 2026-10-06</p>
+            <p>This policy describes how {{APP_NAME}} handles data when you use the service.</p>
+
+            <h2>What we process</h2>
+            <ul>
+                <li>
+                    Connection metadata required to run signaling and matching (for example socket/session identifiers).
+                </li>
+                <li>Basic operational logs for reliability, abuse prevention, and troubleshooting.</li>
+                <li>Rate-limit and anti-spam counters to protect the service.</li>
+            </ul>
+
+            <h2>WebRTC media</h2>
+            <p>
+                Audio and video are exchanged peer-to-peer using WebRTC whenever possible. The server is used for
+                signaling and does not intentionally store call media.
+            </p>
+
+            <h2>How data is used</h2>
+            <ul>
+                <li>To provide random matching and maintain active sessions.</li>
+                <li>To detect abuse and enforce safety and capacity limits.</li>
+                <li>To improve stability and performance of the service.</li>
+            </ul>
+
+            <h2>Data retention</h2>
+            <p>
+                Operational logs and security counters are retained only as long as needed for operations, abuse
+                prevention, and legal compliance.
+            </p>
+
+            <h2>Contact</h2>
+            <p>
+                For privacy questions, contact <a href="{{REPORT_EMAIL_LINK}}">{{REPORT_EMAIL_TEXT}}</a>. Add any
+                region-specific legal disclosures required by your jurisdiction.
+            </p>
+
+            <p><a href="/">Back to {{APP_NAME}}</a></p>
+        </main>
+    </body>
+</html>

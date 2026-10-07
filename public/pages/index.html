@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{APP_NAME}}</title>
+        <meta name="description" content="{{OG_DESCRIPTION}}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="{{OG_TITLE}}" />
+        <meta property="og:description" content="{{OG_DESCRIPTION}}" />
+        <meta property="og:image" content="{{OG_IMAGE}}" />
+        <meta property="og:url" content="{{OG_URL}}" />
+        <meta name="twitter:card" content="{{TWITTER_CARD}}" />
+        <meta name="twitter:title" content="{{OG_TITLE}}" />
+        <meta name="twitter:description" content="{{OG_DESCRIPTION}}" />
+        <meta name="twitter:image" content="{{OG_IMAGE}}" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="stylesheet" href="/css/index.css" />
+        <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
+    </head>
+    <body>
+        <div class="app-shell">
+            <header class="top-bar">
+                <h1><img class="app-title-icon" src="/favicon.svg" alt="" aria-hidden="true" />{{APP_NAME}}</h1>
+            </header>
+
+            <main id="videoLayout" class="video-layout">
+                <section class="video-card local">
+                    <div class="video-header">
+                        <span>You</span>
+                        <span class="dot"></span>
+                    </div>
+                    <video id="localVideo" autoplay playsinline muted></video>
+                    <div id="localAvatarOverlay" class="local-avatar-overlay" hidden>
+                        <div class="video-avatar">🙂</div>
+                        <span>Camera is off</span>
+                    </div>
+                    <div id="settingsPanel" class="local-settings-panel" hidden>
+                        <div class="device-controls in-video">
+                            <label class="input-group" for="cameraSelect">
+                                <span>Camera</span>
+                                <select id="cameraSelect" disabled></select>
+                            </label>
+                            <label class="input-group" for="microphoneSelect">
+                                <span>Microphone</span>
+                                <select id="microphoneSelect" disabled></select>
+                            </label>
+                            <label class="input-group" for="backgroundModeSelect">
+                                <span>Background</span>
+                                <select id="backgroundModeSelect" disabled>
+                                    <option value="off">Off</option>
+                                    <option value="blur">Blur</option>
+                                    <option value="image">Image</option>
+                                </select>
+                            </label>
+                            <div id="backgroundImagePickerRow" class="background-image-picker-row" hidden>
+                                <button id="backgroundImageBtn" class="btn subtle-btn" type="button">
+                                    Choose image…
+                                </button>
+                                <span id="backgroundImageName" class="background-image-name">No image selected</span>
+                                <input id="backgroundImageInput" type="file" accept="image/*" hidden />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="local-actions">
+                        <button
+                            id="muteBtn"
+                            class="btn icon-btn floating-control"
+                            disabled
+                            aria-label="Toggle microphone"
+                            title="Toggle microphone"
+                        ></button>
+                        <button
+                            id="cameraBtn"
+                            class="btn icon-btn floating-control"
+                            disabled
+                            aria-label="Toggle camera"
+                            title="Toggle camera"
+                        ></button>
+                        <button
+                            id="settingsBtn"
+                            class="btn icon-btn floating-control"
+                            type="button"
+                            aria-label="Open media menu"
+                            title="Open media menu"
+                            aria-expanded="false"
+                            aria-controls="settingsPanel"
+                        >
+                            <i data-lucide="chevrons-up-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="video-card remote">
+                    <div class="video-header">
+                        <span>Partner</span>
+                        <span class="dot live"></span>
+                        <span id="connectionBadge" class="connection-badge idle">Idle</span>
+                    </div>
+                    <div id="remoteMediaStatus" class="remote-media-status" hidden>
+                        <span
+                            id="remoteMicStatus"
+                            class="remote-media-pill"
+                            hidden
+                            title="Partner microphone is off"
+                            aria-label="Partner microphone is off"
+                        >
+                            <i data-lucide="mic-off" aria-hidden="true"></i>
+                            <span class="sr-only">Partner microphone is off</span>
+                        </span>
+                        <span
+                            id="remoteCameraStatus"
+                            class="remote-media-pill"
+                            hidden
+                            title="Partner camera is off"
+                            aria-label="Partner camera is off"
+                        >
+                            <i data-lucide="video-off" aria-hidden="true"></i>
+                            <span class="sr-only">Partner camera is off</span>
+                        </span>
+                    </div>
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div id="remoteAvatarOverlay" class="remote-avatar-overlay" hidden>
+                        <div class="video-avatar">🙂</div>
+                        <span>Camera is off</span>
+                    </div>
+                    <div class="video-placeholder" id="remotePlaceholder">
+                        <span class="video-spinner" aria-hidden="true"></span>
+                        <span id="remotePlaceholderText">Waiting for partner...</span>
+                    </div>
+                    <div class="remote-actions">
+                        <button
+                            id="startBtn"
+                            class="btn action-btn primary-btn"
+                            aria-label="Start matching"
+                            title="Start matching"
+                        >
+                            <i data-lucide="play" aria-hidden="true"></i>
+                        </button>
+                        <button
+                            id="nextBtn"
+                            class="btn action-btn accent-btn next-match-btn"
+                            disabled
+                            aria-label="Next match"
+                            title="Next match"
+                        >
+                            <i data-lucide="skip-forward" aria-hidden="true"></i>
+                        </button>
+                        <button
+                            id="enableSoundBtn"
+                            class="btn action-btn subtle-btn"
+                            type="button"
+                            hidden
+                            aria-label="Enable sound"
+                            title="Enable sound"
+                        >
+                            <i data-lucide="volume-2" aria-hidden="true"></i>
+                        </button>
+                        <button
+                            id="hideSelfBtn"
+                            class="btn action-btn subtle-btn"
+                            type="button"
+                            aria-label="Hide my preview"
+                            title="Hide my preview"
+                        ></button>
+                        <button
+                            id="endSessionBtn"
+                            class="btn action-btn end-btn"
+                            type="button"
+                            aria-label="End session"
+                            title="End session"
+                            disabled
+                        >
+                            <i data-lucide="power" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="app-footer">
+                <a href="/privacy.html">Privacy</a>
+                <span aria-hidden="true">•</span>
+                <a href="/terms.html">Terms</a>
+                <span aria-hidden="true">•</span>
+                <a href="/safety.html">Safety</a>
+            </footer>
+
+            <p id="statusText" class="sr-only" aria-live="polite">Idle.</p>
+            <p id="onboardingHint" class="sr-only">
+                Open media menu to prepare camera and microphone, then start matching.
+            </p>
+
+            <div id="capacityModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
+                <div class="capacity-modal-card">
+                    <h2>We’re full right now 🙏</h2>
+                    <p id="capacityMessage">
+                        All chat slots are currently busy. Please try again in a minute, we’ll be happy to connect you.
+                    </p>
+                    <button id="capacityRetryBtn" class="btn primary-btn" type="button">Try again</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <script src="https://unpkg.com/@popperjs/core@2"></script>
+        <script src="https://unpkg.com/tippy.js@6"></script>
+        <script type="module" src="/app.js"></script>
+    </body>
+</html>

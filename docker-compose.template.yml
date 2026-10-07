@@ -1,0 +1,11 @@
+services:
+    mirotalkrnd:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: mirotalkrnd
+        ports:
+            - '${PORT:-4010}:${PORT:-4010}'
+        env_file:
+            - .env
+        restart: unless-stopped

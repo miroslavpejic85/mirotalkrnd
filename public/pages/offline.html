@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{APP_NAME}} | Offline</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="stylesheet" href="/css/index.css" />
+    </head>
+    <body>
+        <div class="app-shell offline-shell">
+            <header class="top-bar">
+                <h1><img class="app-title-icon" src="/favicon.svg" alt="" aria-hidden="true" />{{APP_NAME}}</h1>
+            </header>
+
+            <main class="offline-layout" role="main">
+                <section class="video-card offline-card">
+                    <div class="video-header">
+                        <span>Service status</span>
+                        <span class="dot"></span>
+                        <span class="connection-badge error">Offline</span>
+                    </div>
+                    <div class="offline-content">
+                        <h2>We will be back soon</h2>
+                        <p>{{OFFLINE_MESSAGE}}</p>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="app-footer">
+                <a href="/privacy.html">Privacy</a>
+                <span aria-hidden="true">•</span>
+                <a href="/terms.html">Terms</a>
+                <span aria-hidden="true">•</span>
+                <a href="/safety.html">Safety</a>
+            </footer>
+        </div>
+    </body>
+</html>

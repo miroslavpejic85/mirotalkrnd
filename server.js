@@ -1,0 +1,95 @@
+require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const https = require('https');
+const express = require('express');
+const { Server } = require('socket.io');
+const { createRuntimeConfig } = require('./src/config/runtime-config');
+const { createHttpRateLimiter } = require('./src/http/create-http-rate-limiter');
+const { registerHttpRoutes } = require('./src/http/register-http-routes');
+const { createMatchmakingService } = require('./src/socket/matchmaking-service');
+const { registerSocketHandlers } = require('./src/socket/register-socket-handlers');
+
+const app = express();
+const runtimeConfig = createRuntimeConfig(process.env);
+const {
+    port,
+    appName,
+    reportEmail,
+    appOffline,
+    offlineMessage,
+    socialMeta,
+    useHttps,
+    sslKeyPath,
+    sslCertPath,
+    rtcConfig,
+    limits,
+} = runtimeConfig;
+const { apiRateLimitWindowMs, apiRateLimitMaxRequests } = limits;
+const apiRateLimiter =
+    apiRateLimitWindowMs && apiRateLimitMaxRequests
+        ? createHttpRateLimiter(apiRateLimitWindowMs, apiRateLimitMaxRequests)
+        : null;
+
+function createTransportServer() {
+    if (!useHttps) {
+        return http.createServer(app);
+    }
+
+    const keyPath = path.resolve(__dirname, sslKeyPath);
+    const certPath = path.resolve(__dirname, sslCertPath);
+
+    if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
+        throw new Error(
+            `HTTPS is enabled but SSL files are missing. Expected key at "${keyPath}" and cert at "${certPath}".`
+        );
+    }
+
+    return https.createServer(
+        {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+        },
+        app
+    );
+}
+
+const server = createTransportServer();
+const io = new Server(server);
+
+if (appOffline) {
+    io.use((_, next) => {
+        const offlineError = new Error('APP_OFFLINE');
+        offlineError.data = { message: offlineMessage };
+        next(offlineError);
+    });
+}
+
+registerHttpRoutes({
+    app,
+    staticDirPath: path.join(__dirname, 'public'),
+    appName,
+    reportEmail,
+    appOffline,
+    offlineMessage,
+    socialMeta,
+    rtcConfig,
+    apiRateLimiter,
+});
+
+const matchmaking = createMatchmakingService({
+    io,
+    maxQueueUsers: limits.maxQueueUsers,
+});
+
+registerSocketHandlers({
+    io,
+    limits,
+    matchmaking,
+});
+
+server.listen(port, () => {
+    const protocol = useHttps ? 'https' : 'http';
+    console.log(`${appName} running on ${protocol}://localhost:${port}`);
+});
