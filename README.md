@@ -1,8 +1,17 @@
-# MiroTalk RND
+<h1 align="center">MiroTalk RND</h1>
 
-_Meet someone random. Talk instantly._
+<p align="center"><em>Meet someone random. Talk instantly.</em></p>
 
-Random 1-on-1 video chat built with Node.js, Socket.IO, and WebRTC.
+<p align="center">Random 1-on-1 video chat built with Node.js, Socket.IO, and WebRTC.</p>
+
+<p align="center">
+  <a href="#-what-it-does">Features</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-docker">Docker</a> •
+  <a href="#-configuration-env">Configuration</a>
+</p>
+
+---
 
 ## ✨ What it does
 
@@ -54,7 +63,7 @@ The installer supports:
 
 Edit `.env` for your needs use [.env.template](.env.template) as reference, then restart the server.
 
-## Scripts
+## 📜 Scripts
 
 - `npm start` — start server
 - `npm run dev` — run with watch mode
