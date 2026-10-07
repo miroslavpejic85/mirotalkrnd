@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 
 const APP_NAME_PLACEHOLDER = '{{APP_NAME}}';
+const ABOUT_LINK_PLACEHOLDER = '{{ABOUT_LINK}}';
 const REPORT_EMAIL_LINK_PLACEHOLDER = '{{REPORT_EMAIL_LINK}}';
 const REPORT_EMAIL_TEXT_PLACEHOLDER = '{{REPORT_EMAIL_TEXT}}';
 const OFFLINE_MESSAGE_PLACEHOLDER = '{{OFFLINE_MESSAGE}}';
@@ -36,6 +37,7 @@ function registerHttpRoutes({
     app,
     staticDirPath,
     appName,
+    aboutLink,
     reportEmailLink,
     reportEmailText,
     appOffline,
@@ -47,6 +49,7 @@ function registerHttpRoutes({
     const { ogTitle, ogDescription, ogImage, ogUrl, twitterCard } = socialMeta;
     const templateReplacements = {
         [APP_NAME_PLACEHOLDER]: appName,
+        [ABOUT_LINK_PLACEHOLDER]: aboutLink,
         [REPORT_EMAIL_LINK_PLACEHOLDER]: reportEmailLink,
         [REPORT_EMAIL_TEXT_PLACEHOLDER]: reportEmailText,
         [OFFLINE_MESSAGE_PLACEHOLDER]: offlineMessage,

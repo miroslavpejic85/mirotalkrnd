@@ -16,6 +16,7 @@ const runtimeConfig = createRuntimeConfig(process.env);
 const {
     port,
     appName,
+    aboutLink,
     reportEmailLink,
     reportEmailText,
     appOffline,
@@ -73,6 +74,7 @@ registerHttpRoutes({
     app,
     staticDirPath: path.join(__dirname, 'public'),
     appName,
+    aboutLink,
     reportEmailLink,
     reportEmailText,
     appOffline,

@@ -1,5 +1,6 @@
 const DEFAULT_APP_NAME = 'Random Talk';
 const DEFAULT_NODE_ENV = 'development';
+const DEFAULT_ABOUT_LINK = 'https://docs.mirotalk.com/sites/rnd/';
 
 function parseUrls(value) {
     if (!value) {
@@ -135,6 +136,7 @@ function createRuntimeConfig(env) {
     const port = env.PORT || 4010;
     const nodeEnv = env.NODE_ENV?.trim() || DEFAULT_NODE_ENV;
     const appName = trimString(env.APP_NAME) || DEFAULT_APP_NAME;
+    const aboutLink = trimString(env.ABOUT_LINK) || DEFAULT_ABOUT_LINK;
     const { reportEmailLink, reportEmailText } = getReportEmailValues(env);
     const appOffline = parseBoolean(env.APP_OFFLINE, false);
     const offlineMessage =
@@ -201,6 +203,7 @@ function createRuntimeConfig(env) {
         port,
         nodeEnv,
         appName,
+        aboutLink,
         reportEmailLink,
         reportEmailText,
         appOffline,
