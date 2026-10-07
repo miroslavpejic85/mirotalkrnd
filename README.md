@@ -1,5 +1,9 @@
 <h1 align="center">MiroTalk RND</h1>
 
+<p align="center">
+  <img src="./public/images/social/og-image.png" alt="MiroTalk RND" width="720" />
+</p>
+
 <p align="center"><em>Meet someone random. Talk instantly.</em></p>
 
 <p align="center">Random 1-on-1 video chat built with Node.js, Socket.IO, and WebRTC.</p>

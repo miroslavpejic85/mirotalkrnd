@@ -118,7 +118,7 @@ function createRuntimeConfig(env) {
     const ogTitle = trimString(env.OG_TITLE) || appName;
     const ogDescription =
         trimString(env.OG_DESCRIPTION) || `Meet someone random and start an instant video chat on ${appName}.`;
-    const ogImage = trimString(env.OG_IMAGE) || '/favicon.svg';
+    const ogImage = trimString(env.OG_IMAGE) || '/images/social/og-image.png';
     const ogUrl = trimString(env.OG_URL);
     const twitterCard = trimString(env.TWITTER_CARD) || 'summary_large_image';
     const useHttps = nodeEnv === 'production' ? true : parseBoolean(env.USE_HTTPS, false);
