@@ -22,10 +22,21 @@ function getSocketIp(socket) {
     return normalizeIp(socket.handshake.address);
 }
 
-function registerSocketHandlers({ io, limits, matchmaking }) {
+function registerSocketHandlers({ io, limits, matchmaking, captureException = () => {} }) {
     const socketsByIp = new Map();
     const skipRateWindowsBySocket = new Map();
     const { maxActiveUsers, maxConnectionsPerIp, skipRateLimitPer10s } = limits;
+
+    function safeHandler(eventName, handler) {
+        return (...args) => {
+            try {
+                return handler(...args);
+            } catch (error) {
+                console.error(`Socket handler "${eventName}" failed:`, error);
+                captureException(error, `socket:${eventName}`);
+            }
+        };
+    }
 
     function trackSocketForIp(socketId, ip) {
         const socketIds = socketsByIp.get(ip) ?? new Set();
@@ -140,78 +151,99 @@ function registerSocketHandlers({ io, limits, matchmaking }) {
         trackSocketForIp(socket.id, clientIp);
         logConnectedUsers('connected', socket.id, null, clientIp);
 
-        socket.on('find-partner', () => {
-            matchmaking.unpair(socket.id, 'partner-skipped');
-            matchmaking.findPartnerFor(socket.id);
-        });
+        socket.on(
+            'find-partner',
+            safeHandler('find-partner', () => {
+                matchmaking.unpair(socket.id, 'partner-skipped');
+                matchmaking.findPartnerFor(socket.id);
+            })
+        );
 
-        socket.on('skip-partner', () => {
-            if (isSkipRateLimited(socket.id)) {
-                socket.emit('server-notice', {
-                    code: 'SKIP_RATE_LIMITED',
-                    message: 'You are skipping too quickly. Please wait a few seconds and try again.',
-                    retryAfterSeconds: 10,
-                    maxSkipsPerWindow: skipRateLimitPer10s,
+        socket.on(
+            'skip-partner',
+            safeHandler('skip-partner', () => {
+                if (isSkipRateLimited(socket.id)) {
+                    socket.emit('server-notice', {
+                        code: 'SKIP_RATE_LIMITED',
+                        message: 'You are skipping too quickly. Please wait a few seconds and try again.',
+                        retryAfterSeconds: 10,
+                        maxSkipsPerWindow: skipRateLimitPer10s,
+                    });
+                    return;
+                }
+
+                const previousPartnerId = matchmaking.unpair(socket.id, 'partner-skipped');
+                matchmaking.findPartnerFor(socket.id);
+
+                if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
+                    matchmaking.findPartnerFor(previousPartnerId);
+                }
+            })
+        );
+
+        socket.on(
+            'webrtc-offer',
+            safeHandler('webrtc-offer', (payload) => {
+                const partnerId = matchmaking.getPartnerId(socket.id);
+                if (!partnerId || !payload?.sdp) {
+                    return;
+                }
+                io.to(partnerId).emit('webrtc-offer', { sdp: payload.sdp });
+            })
+        );
+
+        socket.on(
+            'webrtc-answer',
+            safeHandler('webrtc-answer', (payload) => {
+                const partnerId = matchmaking.getPartnerId(socket.id);
+                if (!partnerId || !payload?.sdp) {
+                    return;
+                }
+                io.to(partnerId).emit('webrtc-answer', { sdp: payload.sdp });
+            })
+        );
+
+        socket.on(
+            'webrtc-ice-candidate',
+            safeHandler('webrtc-ice-candidate', (payload) => {
+                const partnerId = matchmaking.getPartnerId(socket.id);
+                if (!partnerId || !payload?.candidate) {
+                    return;
+                }
+                io.to(partnerId).emit('webrtc-ice-candidate', { candidate: payload.candidate });
+            })
+        );
+
+        socket.on(
+            'media-state-update',
+            safeHandler('media-state-update', (payload) => {
+                if (typeof payload?.isMuted !== 'boolean' || typeof payload?.isCameraOff !== 'boolean') {
+                    return;
+                }
+
+                matchmaking.setMediaStateForSocket(socket.id, {
+                    isMuted: payload.isMuted,
+                    isCameraOff: payload.isCameraOff,
                 });
-                return;
-            }
+            })
+        );
 
-            const previousPartnerId = matchmaking.unpair(socket.id, 'partner-skipped');
-            matchmaking.findPartnerFor(socket.id);
+        socket.on(
+            'disconnect',
+            safeHandler('disconnect', (reason) => {
+                matchmaking.removeFromQueue(socket.id);
+                const previousPartnerId = matchmaking.unpair(socket.id, 'partner-left');
+                clearSkipRateLimit(socket.id);
+                untrackSocketForIp(socket.id, clientIp);
+                matchmaking.deleteMediaStateForSocket(socket.id);
 
-            if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
-                matchmaking.findPartnerFor(previousPartnerId);
-            }
-        });
+                logConnectedUsers('disconnected', socket.id, reason, clientIp);
 
-        socket.on('webrtc-offer', (payload) => {
-            const partnerId = matchmaking.getPartnerId(socket.id);
-            if (!partnerId || !payload?.sdp) {
-                return;
-            }
-            io.to(partnerId).emit('webrtc-offer', { sdp: payload.sdp });
-        });
-
-        socket.on('webrtc-answer', (payload) => {
-            const partnerId = matchmaking.getPartnerId(socket.id);
-            if (!partnerId || !payload?.sdp) {
-                return;
-            }
-            io.to(partnerId).emit('webrtc-answer', { sdp: payload.sdp });
-        });
-
-        socket.on('webrtc-ice-candidate', (payload) => {
-            const partnerId = matchmaking.getPartnerId(socket.id);
-            if (!partnerId || !payload?.candidate) {
-                return;
-            }
-            io.to(partnerId).emit('webrtc-ice-candidate', { candidate: payload.candidate });
-        });
-
-        socket.on('media-state-update', (payload) => {
-            if (typeof payload?.isMuted !== 'boolean' || typeof payload?.isCameraOff !== 'boolean') {
-                return;
-            }
-
-            matchmaking.setMediaStateForSocket(socket.id, {
-                isMuted: payload.isMuted,
-                isCameraOff: payload.isCameraOff,
-            });
-        });
-
-        socket.on('disconnect', (reason) => {
-            matchmaking.removeFromQueue(socket.id);
-            const previousPartnerId = matchmaking.unpair(socket.id, 'partner-left');
-            clearSkipRateLimit(socket.id);
-            untrackSocketForIp(socket.id, clientIp);
-            matchmaking.deleteMediaStateForSocket(socket.id);
-
-            logConnectedUsers('disconnected', socket.id, reason, clientIp);
-
-            if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
-                matchmaking.findPartnerFor(previousPartnerId);
-            }
-        });
+                if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
+                    matchmaking.findPartnerFor(previousPartnerId);
+                }
+            })
+        );
     });
 }
 

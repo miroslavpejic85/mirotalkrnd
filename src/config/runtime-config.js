@@ -108,6 +108,21 @@ function parseTrustProxy(value) {
     return value.trim();
 }
 
+function parseSampleRate(value, key) {
+    const trimmedValue = trimString(value);
+    if (!trimmedValue) {
+        return 0;
+    }
+
+    const parsedValue = Number.parseFloat(trimmedValue);
+    if (Number.isFinite(parsedValue) && parsedValue >= 0 && parsedValue <= 1) {
+        return parsedValue;
+    }
+
+    console.warn(`Invalid ${key} value "${value}". Using 0. Use a number between 0 and 1.`);
+    return 0;
+}
+
 function getReportEmailValues(env) {
     const legacyEmail = trimString(env.REPORT_EMAIL);
     let link = trimString(env.REPORT_EMAIL_LINK);
@@ -161,6 +176,13 @@ function createRuntimeConfig(env) {
     const apiRateLimitMaxRequests = getOptionalPositiveInteger(
         Number.parseInt(env.API_RATE_LIMIT_MAX_REQUESTS ?? '120', 10)
     );
+
+    const sentryDsn = trimString(env.SENTRY_DSN);
+    const sentryEnabled = parseBoolean(env.SENTRY_ENABLED, false);
+
+    if (sentryEnabled && !sentryDsn) {
+        console.warn('SENTRY_ENABLED is true but SENTRY_DSN is missing. Sentry will be disabled.');
+    }
 
     warnInvalidOptionalValue(
         env,
@@ -221,6 +243,13 @@ function createRuntimeConfig(env) {
         sslCertPath,
         rtcConfig: {
             iceServers: buildIceServersFromEnv(env),
+        },
+        sentry: {
+            enabled: sentryEnabled && Boolean(sentryDsn),
+            dsn: sentryDsn,
+            environment: trimString(env.SENTRY_ENVIRONMENT) || nodeEnv,
+            release: trimString(env.SENTRY_RELEASE),
+            tracesSampleRate: parseSampleRate(env.SENTRY_TRACES_SAMPLE_RATE, 'SENTRY_TRACES_SAMPLE_RATE'),
         },
         limits: {
             maxActiveUsers,

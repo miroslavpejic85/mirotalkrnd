@@ -1,18 +1,23 @@
 require('dotenv').config();
+const { createRuntimeConfig } = require('./src/config/runtime-config');
+const { initSentry, setupExpressErrorHandler, captureException } = require('./src/monitoring/sentry');
+
+const runtimeConfig = createRuntimeConfig(process.env);
+// Must run before express/http are required so Sentry can instrument them.
+initSentry(runtimeConfig.sentry);
+
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
 const express = require('express');
 const { Server } = require('socket.io');
-const { createRuntimeConfig } = require('./src/config/runtime-config');
 const { createHttpRateLimiter } = require('./src/http/create-http-rate-limiter');
 const { registerHttpRoutes } = require('./src/http/register-http-routes');
 const { createMatchmakingService } = require('./src/socket/matchmaking-service');
 const { registerSocketHandlers } = require('./src/socket/register-socket-handlers');
 
 const app = express();
-const runtimeConfig = createRuntimeConfig(process.env);
 const {
     port,
     appName,
@@ -84,6 +89,8 @@ registerHttpRoutes({
     apiRateLimiter,
 });
 
+setupExpressErrorHandler(app);
+
 const matchmaking = createMatchmakingService({
     io,
     maxQueueUsers: limits.maxQueueUsers,
@@ -93,6 +100,7 @@ registerSocketHandlers({
     io,
     limits,
     matchmaking,
+    captureException,
 });
 
 server.listen(port, () => {
