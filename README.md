@@ -33,7 +33,8 @@ Then open: `http://localhost:4010`
 ```bash
 cp .env.template .env
 cp docker-compose.template.yml docker-compose.yml
-docker compose up --build
+docker compose pull
+docker compose up -d
 ```
 
 Then open: `http://localhost:<PORT>` (default `4010`).
