@@ -102,9 +102,9 @@ export class RandomVideoChatApp {
         this.el.nextBtn.setAttribute('data-tippy-content', this.el.nextBtn.title);
         this.el.nextBtn.setAttribute('data-tippy-placement', 'top');
         this.el.hideSelfBtn.setAttribute('data-tippy-content', this.el.hideSelfBtn.title);
-        this.el.hideSelfBtn.setAttribute('data-tippy-placement', 'left');
+        this.el.hideSelfBtn.setAttribute('data-tippy-placement', 'top');
         this.el.settingsBtn.setAttribute('data-tippy-content', this.el.settingsBtn.title);
-        this.el.settingsBtn.setAttribute('data-tippy-placement', 'left');
+        this.el.settingsBtn.setAttribute('data-tippy-placement', 'bottom');
         this.el.backgroundImageBtn.setAttribute('data-tippy-content', 'Choose background image');
         this.el.backgroundImageBtn.setAttribute('data-tippy-placement', 'left');
         this.el.enableSoundBtn.setAttribute('data-tippy-content', this.el.enableSoundBtn.title);
