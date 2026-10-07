@@ -32,25 +32,12 @@ function renderHtmlTemplate(staticDirPath, fileName, replacements) {
     );
 }
 
-function getReportEmailValues(reportEmail) {
-    if (!reportEmail) {
-        return {
-            reportEmailLink: 'mailto:your-email@example.com',
-            reportEmailText: 'your-email@example.com',
-        };
-    }
-
-    return {
-        reportEmailLink: `mailto:${reportEmail}`,
-        reportEmailText: reportEmail,
-    };
-}
-
 function registerHttpRoutes({
     app,
     staticDirPath,
     appName,
-    reportEmail,
+    reportEmailLink,
+    reportEmailText,
     appOffline,
     offlineMessage,
     socialMeta,
@@ -58,7 +45,6 @@ function registerHttpRoutes({
     apiRateLimiter,
 }) {
     const { ogTitle, ogDescription, ogImage, ogUrl, twitterCard } = socialMeta;
-    const { reportEmailLink, reportEmailText } = getReportEmailValues(reportEmail);
     const templateReplacements = {
         [APP_NAME_PLACEHOLDER]: appName,
         [REPORT_EMAIL_LINK_PLACEHOLDER]: reportEmailLink,

@@ -107,11 +107,35 @@ function parseTrustProxy(value) {
     return value.trim();
 }
 
+function getReportEmailValues(env) {
+    const legacyEmail = trimString(env.REPORT_EMAIL);
+    let link = trimString(env.REPORT_EMAIL_LINK);
+    let text = trimString(env.REPORT_EMAIL_TEXT);
+
+    if (!link && !text && legacyEmail) {
+        link = `mailto:${legacyEmail}`;
+        text = legacyEmail;
+    }
+
+    if (link && !text) {
+        text = link.replace(/^mailto:/i, '').split('?')[0];
+    }
+
+    if (text && !link) {
+        link = text.includes('@') ? `mailto:${text}` : text;
+    }
+
+    return {
+        reportEmailLink: link || 'mailto:your-email@example.com',
+        reportEmailText: text || 'your-email@example.com',
+    };
+}
+
 function createRuntimeConfig(env) {
     const port = env.PORT || 4010;
     const nodeEnv = env.NODE_ENV?.trim() || DEFAULT_NODE_ENV;
     const appName = trimString(env.APP_NAME) || DEFAULT_APP_NAME;
-    const reportEmail = trimString(env.REPORT_EMAIL);
+    const { reportEmailLink, reportEmailText } = getReportEmailValues(env);
     const appOffline = parseBoolean(env.APP_OFFLINE, false);
     const offlineMessage =
         trimString(env.OFFLINE_MESSAGE) || 'We are currently offline for maintenance. Please check back soon.';
@@ -177,7 +201,8 @@ function createRuntimeConfig(env) {
         port,
         nodeEnv,
         appName,
-        reportEmail,
+        reportEmailLink,
+        reportEmailText,
         appOffline,
         offlineMessage,
         socialMeta: {
