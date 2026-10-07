@@ -92,11 +92,11 @@ function parseTrustProxy(value) {
 
     const normalizedValue = value.trim().toLowerCase();
 
-    if (normalizedValue === 'true' || normalizedValue === '1') {
+    if (normalizedValue === 'true') {
         return true;
     }
 
-    if (normalizedValue === 'false' || normalizedValue === '0') {
+    if (normalizedValue === 'false') {
         return false;
     }
 
