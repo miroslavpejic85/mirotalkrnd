@@ -10,8 +10,8 @@ services:
         ports:
             - '${PORT:-4010}:${PORT:-4010}'
         volumes:
-            - .env:/src/.env:ro
+            - .env:/app/.env:ro
             # Optional volumes for real-time updates:
-            # - ./public/:/src/public/:ro
-            # - ./src/:/src/src/:ro
-            # - ./server.js:/src/server.js
+            # - ./public/:/app/public/:ro
+            # - ./src/:/app/src/:ro
+            # - ./server.js:/app/server.js
