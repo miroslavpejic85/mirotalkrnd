@@ -123,6 +123,43 @@ function parseSampleRate(value, key) {
     return 0;
 }
 
+function parseHttpUrl(value, key) {
+    const trimmedValue = trimString(value);
+    if (!trimmedValue) {
+        return '';
+    }
+
+    try {
+        const { protocol } = new URL(trimmedValue);
+        if (protocol === 'http:' || protocol === 'https:') {
+            return trimmedValue;
+        }
+    } catch {
+        // fall through to the warning below
+    }
+
+    console.warn(`Invalid ${key} value "${value}". Use a full http(s) URL.`);
+    return '';
+}
+
+function getUmamiConfig(env) {
+    const enabled = parseBoolean(env.UMAMI_ENABLED, false);
+    const scriptUrl = parseHttpUrl(env.UMAMI_SCRIPT_URL, 'UMAMI_SCRIPT_URL');
+    const websiteId = trimString(env.UMAMI_WEBSITE_ID);
+
+    if (enabled && (!scriptUrl || !websiteId)) {
+        console.warn('UMAMI_ENABLED is true but UMAMI_SCRIPT_URL/UMAMI_WEBSITE_ID is missing. Umami will be disabled.');
+    }
+
+    return {
+        enabled: enabled && Boolean(scriptUrl && websiteId),
+        scriptUrl,
+        websiteId,
+        domains: trimString(env.UMAMI_DOMAINS),
+        doNotTrack: parseBoolean(env.UMAMI_DO_NOT_TRACK, true),
+    };
+}
+
 function getReportEmailValues(env) {
     const legacyEmail = trimString(env.REPORT_EMAIL);
     let link = trimString(env.REPORT_EMAIL_LINK);
@@ -244,6 +281,7 @@ function createRuntimeConfig(env) {
         rtcConfig: {
             iceServers: buildIceServersFromEnv(env),
         },
+        umami: getUmamiConfig(env),
         sentry: {
             enabled: sentryEnabled && Boolean(sentryDsn),
             dsn: sentryDsn,

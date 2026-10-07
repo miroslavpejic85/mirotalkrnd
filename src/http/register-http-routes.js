@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const { escapeHtml } = require('./escape-html');
+const { buildPrivacyNotices } = require('./privacy-notices');
+const { buildUmamiScriptTag } = require('../monitoring/umami');
 
 const APP_NAME_PLACEHOLDER = '{{APP_NAME}}';
 const ABOUT_LINK_PLACEHOLDER = '{{ABOUT_LINK}}';
@@ -12,24 +15,20 @@ const OG_DESCRIPTION_PLACEHOLDER = '{{OG_DESCRIPTION}}';
 const OG_IMAGE_PLACEHOLDER = '{{OG_IMAGE}}';
 const OG_URL_PLACEHOLDER = '{{OG_URL}}';
 const TWITTER_CARD_PLACEHOLDER = '{{TWITTER_CARD}}';
-const HTML_ESCAPE_ENTITIES = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-};
-
-function escapeHtml(value) {
-    return value.replace(/[&<>"']/g, (character) => HTML_ESCAPE_ENTITIES[character]);
-}
-
-function renderHtmlTemplate(staticDirPath, fileName, replacements) {
+const ANALYTICS_SCRIPT_PLACEHOLDER = '{{ANALYTICS_SCRIPT}}';
+const PRIVACY_NOTICES_PLACEHOLDER = '{{PRIVACY_NOTICES}}';
+function renderHtmlTemplate(staticDirPath, fileName, replacements, rawReplacements = {}) {
     const templatePath = path.join(staticDirPath, fileName);
     const template = fs.readFileSync(templatePath, 'utf8');
-    return Object.entries(replacements).reduce(
+    const escapedHtml = Object.entries(replacements).reduce(
         (html, [placeholder, value]) => html.replaceAll(placeholder, () => escapeHtml(value)),
         template
+    );
+
+    // Raw values are trusted HTML built server-side (inputs already escaped).
+    return Object.entries(rawReplacements).reduce(
+        (html, [placeholder, value]) => html.replaceAll(placeholder, () => value),
+        escapedHtml
     );
 }
 
@@ -45,6 +44,8 @@ function registerHttpRoutes({
     socialMeta,
     rtcConfig,
     apiRateLimiter,
+    umami,
+    sentry,
 }) {
     const { ogTitle, ogDescription, ogImage, ogUrl, twitterCard } = socialMeta;
     const templateReplacements = {
@@ -59,11 +60,19 @@ function registerHttpRoutes({
         [OG_URL_PLACEHOLDER]: ogUrl,
         [TWITTER_CARD_PLACEHOLDER]: twitterCard,
     };
-    const indexHtml = renderHtmlTemplate(staticDirPath, 'pages/index.html', templateReplacements);
-    const offlineHtml = renderHtmlTemplate(staticDirPath, 'pages/offline.html', templateReplacements);
-    const privacyHtml = renderHtmlTemplate(staticDirPath, 'pages/privacy.html', templateReplacements);
-    const termsHtml = renderHtmlTemplate(staticDirPath, 'pages/terms.html', templateReplacements);
-    const safetyHtml = renderHtmlTemplate(staticDirPath, 'pages/safety.html', templateReplacements);
+    const rawReplacements = {
+        [ANALYTICS_SCRIPT_PLACEHOLDER]: buildUmamiScriptTag(umami),
+        [PRIVACY_NOTICES_PLACEHOLDER]: buildPrivacyNotices({
+            umamiEnabled: Boolean(umami?.enabled),
+            sentryEnabled: Boolean(sentry?.enabled),
+        }),
+    };
+    const render = (fileName) => renderHtmlTemplate(staticDirPath, fileName, templateReplacements, rawReplacements);
+    const indexHtml = render('pages/index.html');
+    const offlineHtml = render('pages/offline.html');
+    const privacyHtml = render('pages/privacy.html');
+    const termsHtml = render('pages/terms.html');
+    const safetyHtml = render('pages/safety.html');
 
     app.get(['/', '/index.html'], (_, res) => {
         if (appOffline) {

@@ -87,6 +87,8 @@ registerHttpRoutes({
     socialMeta,
     rtcConfig,
     apiRateLimiter,
+    umami: runtimeConfig.umami,
+    sentry: runtimeConfig.sentry,
 });
 
 setupExpressErrorHandler(app);
