@@ -63,6 +63,12 @@ The installer supports:
 
 Edit `.env` for your needs use [.env.template](.env.template) as reference, then restart the server.
 
+## 📚 Documentation
+
+- [Configurations](https://docs.mirotalk.com/mirotalk-rnd/configurations/)
+- [Self-hosting](https://docs.mirotalk.com/mirotalk-rnd/self-hosting/)
+- [Metrics](https://docs.mirotalk.com/mirotalk-rnd/metrics/)
+
 ## 📜 Scripts
 
 - `npm start` — start server
@@ -72,10 +78,6 @@ Edit `.env` for your needs use [.env.template](.env.template) as reference, then
 
 This project is licensed under the GNU Affero General Public License v3.0.
 See [LICENSE](./LICENSE).
-
-## More
-
-See [README-METRICS.md](./docs/README-METRICS.md).
 
 ---
 
