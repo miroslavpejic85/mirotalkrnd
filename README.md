@@ -70,6 +70,10 @@ See [README-METRICS.md](./docs/README-METRICS.md).
 
 ---
 
-🌐 Explore the full MiroTalk suite (SFU, P2P, BRO, C2C, WEB, CME, ADM) → [MiroTalk Overview](https://docs.mirotalk.com/sites/overview/)
+<p align="center">
+  🌐 Explore the full MiroTalk suite (SFU, P2P, BRO, C2C, WEB, CME, ADM) → <a href="https://docs.mirotalk.com/sites/overview/">MiroTalk Overview</a>
+</p>
 
-Built with ❤️ by [Miroslav](https://www.linkedin.com/in/miroslav-pejic-976a07101/) and the open-source community.
+<p align="center">
+  Built with ❤️ by <a href="https://www.linkedin.com/in/miroslav-pejic-976a07101/">Miroslav</a> and the open-source community.
+</p>
