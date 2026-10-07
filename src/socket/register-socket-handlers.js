@@ -92,8 +92,9 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
         const limitLabel = maxActiveUsers ? `/${maxActiveUsers}` : '';
         const reasonLabel = reason ? ` reason="${reason}"` : '';
         const ipLabel = ip ? ` ip=${ip}` : '';
+        const timestamp = new Date().toISOString();
         console.log(
-            `[users] ${eventLabel} socket=${socketId}${ipLabel} connected=${connectedUsers}${limitLabel}${reasonLabel}`
+            `[${timestamp}] [users] ${eventLabel} socket=${socketId}${ipLabel} connected=${connectedUsers}${limitLabel}${reasonLabel}`
         );
     }
 

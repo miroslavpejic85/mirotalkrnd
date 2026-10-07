@@ -29,6 +29,7 @@
 - Device selection
 - Virtual background support (blur and image)
 - Queue, capacity, and anti-spam limits
+- Connection logs with ISO 8601 timestamps
 - Mobile-friendly UI
 
 ## 🚀 Quick start
