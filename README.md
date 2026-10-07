@@ -78,6 +78,7 @@ If you run behind a reverse proxy (for example Nginx), set `TRUST_PROXY=1` (or `
 
 - [Configurations](https://docs.mirotalk.com/mirotalk-rnd/configurations/)
 - [Self-hosting](https://docs.mirotalk.com/mirotalk-rnd/self-hosting/)
+- [Integration](https://docs.mirotalk.com/mirotalk-rnd/integration/)
 - [Metrics](https://docs.mirotalk.com/mirotalk-rnd/metrics/)
 
 ## 📜 Scripts
