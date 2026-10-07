@@ -72,8 +72,6 @@ The installer supports:
 
 Edit `.env` for your needs use [.env.template](.env.template) as reference, then restart the server.
 
-If you run behind one reverse proxy (for example Nginx), set `TRUST_PROXY=1` so rate limiting uses the client IP from `X-Forwarded-For`. Numeric values specify the number of trusted proxy hops; use `false` when connecting directly. Avoid `true`: it trusts every forwarded address and triggers an `express-rate-limit` validation error. Ensure the app is accessible only through the proxy and the proxy overwrites `X-Forwarded-For`; all request paths must match the configured hop count. Restart the server (or recreate the Docker container) after changing `.env`. The setting is named `TRUST_PROXY`, not `PROXY`, and is independent of `NODE_ENV`.
-
 ## 📚 Documentation
 
 - [Configurations](https://docs.mirotalk.com/mirotalk-rnd/configurations/)
