@@ -22,7 +22,13 @@ function getSocketIp(socket) {
     return normalizeIp(socket.handshake.address);
 }
 
-function registerSocketHandlers({ io, limits, matchmaking, captureException = () => {} }) {
+function registerSocketHandlers({
+    io,
+    limits,
+    matchmaking,
+    skipAvoidSamePartner = false,
+    captureException = () => {},
+}) {
     const socketsByIp = new Map();
     const skipRateWindowsBySocket = new Map();
     const { maxActiveUsers, maxConnectionsPerIp, skipRateLimitPer10s } = limits;
@@ -178,10 +184,11 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
                 }
 
                 const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-skipped');
-                await matchmaking.findPartnerFor(socket.id);
+                const excludeId = skipAvoidSamePartner ? previousPartnerId : null;
+                await matchmaking.findPartnerFor(socket.id, { excludeId });
 
                 if (previousPartnerId && (await matchmaking.socketExists(previousPartnerId))) {
-                    await matchmaking.findPartnerFor(previousPartnerId);
+                    await matchmaking.findPartnerFor(previousPartnerId, { excludeId: excludeId && socket.id });
                 }
             })
         );

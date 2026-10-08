@@ -286,6 +286,7 @@ function createRuntimeConfig(env) {
             url: trimString(env.REDIS_URL),
         },
         socketWebsocketOnly: parseBoolean(env.SOCKET_WEBSOCKET_ONLY, false),
+        skipAvoidSamePartner: parseBoolean(env.SKIP_AVOID_SAME_PARTNER, false),
         sentry: {
             enabled: sentryEnabled && Boolean(sentryDsn),
             dsn: sentryDsn,

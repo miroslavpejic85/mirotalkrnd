@@ -36,6 +36,7 @@ const {
     rtcConfig,
     limits,
     socketWebsocketOnly,
+    skipAvoidSamePartner,
 } = runtimeConfig;
 app.set('trust proxy', trustProxy);
 const { apiRateLimitWindowMs, apiRateLimitMaxRequests } = limits;
@@ -115,6 +116,7 @@ async function start() {
         io,
         limits,
         matchmaking,
+        skipAvoidSamePartner,
         captureException,
     });
 

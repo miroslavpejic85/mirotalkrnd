@@ -6,14 +6,15 @@ function createMemoryStore() {
     const mediaStateBySocket = new Map();
 
     return {
-        async claimOrEnqueue(socketId, maxQueueUsers) {
+        async claimOrEnqueue(socketId, maxQueueUsers, excludeId = null) {
             const index = waitingQueue.indexOf(socketId);
             if (index !== -1) {
                 waitingQueue.splice(index, 1);
             }
 
-            const candidateId = waitingQueue.shift();
-            if (candidateId) {
+            const candidateIndex = waitingQueue.findIndex((id) => id !== excludeId);
+            if (candidateIndex !== -1) {
+                const [candidateId] = waitingQueue.splice(candidateIndex, 1);
                 return { status: 'claimed', candidateId };
             }
 

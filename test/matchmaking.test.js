@@ -6,7 +6,7 @@ const redisUrl = process.env.TEST_REDIS_URL;
 let redisRunId = Date.now();
 
 // Runs the same scenarios against one server (memory store) and two servers sharing Redis.
-function defineScenarios(name, { createInstances, skip = false }) {
+function defineScenarios(name, { createInstances, skip = false, skipAvoidSamePartner = false }) {
     describe(name, { skip }, () => {
         let instances;
         let cleanup;
@@ -70,6 +70,39 @@ function defineScenarios(name, { createInstances, skip = false }) {
             await waitFor(() => eventsNamed(b, 'queue-update').length);
         });
 
+        test(
+            skipAvoidSamePartner
+                ? 'skip never re-matches the same partner when nobody else is online'
+                : 'skip re-matches the same partner when nobody else is online',
+            async () => {
+                const a = await clientOn(0);
+                const b = await clientOn(1);
+
+                a.emit('find-partner');
+                b.emit('find-partner');
+                await waitFor(() => eventsNamed(a, 'matched').length && eventsNamed(b, 'matched').length);
+
+                a.emit('skip-partner');
+                await waitFor(() => eventsNamed(b, 'partner-disconnected').length);
+                await wait(300);
+
+                if (skipAvoidSamePartner) {
+                    assert.equal(eventsNamed(a, 'matched').length, 1);
+                    assert.equal(eventsNamed(b, 'matched').length, 1);
+                    assert.ok(eventsNamed(a, 'queue-update').length >= 1);
+                    assert.ok(eventsNamed(b, 'queue-update').length >= 1);
+
+                    // A newcomer is matched with one of them as usual.
+                    const c = await clientOn(0);
+                    c.emit('find-partner');
+                    await waitFor(() => eventsNamed(c, 'matched').length);
+                } else {
+                    assert.equal(eventsNamed(a, 'matched').length, 2);
+                    assert.equal(eventsNamed(b, 'matched').length, 2);
+                }
+            }
+        );
+
         test('does not pair a user with themselves', async () => {
             const a = await clientOn(0);
 
@@ -125,11 +158,32 @@ defineScenarios('single instance (in-memory)', {
     },
 });
 
+defineScenarios('single instance (in-memory), SKIP_AVOID_SAME_PARTNER', {
+    skipAvoidSamePartner: true,
+    async createInstances() {
+        const instance = await createInstance({ skipAvoidSamePartner: true });
+        return { instances: [instance], cleanup: () => instance.close() };
+    },
+});
+
 defineScenarios('two instances sharing Redis (set TEST_REDIS_URL to run)', {
     skip: !redisUrl && 'TEST_REDIS_URL is not set',
     async createInstances() {
         const redis = { url: redisUrl, keyPrefix: `mirotalkrnd-test-${process.pid}-${redisRunId++}:` };
         const instances = [await createInstance({ redis }), await createInstance({ redis })];
+        return { instances, cleanup: () => Promise.all(instances.map((instance) => instance.close())) };
+    },
+});
+
+defineScenarios('two instances sharing Redis, SKIP_AVOID_SAME_PARTNER (set TEST_REDIS_URL to run)', {
+    skip: !redisUrl && 'TEST_REDIS_URL is not set',
+    skipAvoidSamePartner: true,
+    async createInstances() {
+        const redis = { url: redisUrl, keyPrefix: `mirotalkrnd-test-${process.pid}-${redisRunId++}:` };
+        const instances = [
+            await createInstance({ redis, skipAvoidSamePartner: true }),
+            await createInstance({ redis, skipAvoidSamePartner: true }),
+        ];
         return { instances, cleanup: () => Promise.all(instances.map((instance) => instance.close())) };
     },
 });

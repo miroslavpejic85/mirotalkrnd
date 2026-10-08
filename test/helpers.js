@@ -28,12 +28,12 @@ async function waitFor(condition, timeoutMs = 3000) {
 
 // One app instance, as server.js builds it, without HTTP routes. Instances created with the same
 // redis.url and keyPrefix behave like several servers sharing one matchmaking pool.
-async function createInstance({ redis, limits = {} } = {}) {
+async function createInstance({ redis, limits = {}, skipAvoidSamePartner = false } = {}) {
     const server = http.createServer();
     const io = new Server(server);
     const store = redis ? await setupRedis({ io, ...redis }) : createMemoryStore();
     const matchmaking = createMatchmakingService({ io, store });
-    registerSocketHandlers({ io, limits, matchmaking });
+    registerSocketHandlers({ io, limits, matchmaking, skipAvoidSamePartner });
 
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const { port } = server.address();

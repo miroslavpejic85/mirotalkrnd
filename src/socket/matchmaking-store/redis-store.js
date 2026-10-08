@@ -17,10 +17,10 @@ function createRedisStore({ client, keyPrefix = 'mirotalkrnd:' }) {
     }
 
     return {
-        async claimOrEnqueue(socketId, maxQueueUsers) {
+        async claimOrEnqueue(socketId, maxQueueUsers, excludeId = null) {
             const result = await client.eval(CLAIM_OR_ENQUEUE_SCRIPT, {
                 keys: [queueKey],
-                arguments: [socketId, String(maxQueueUsers || 0)],
+                arguments: [socketId, String(maxQueueUsers || 0), excludeId || ''],
             });
             return parseEnqueueResult(result);
         },

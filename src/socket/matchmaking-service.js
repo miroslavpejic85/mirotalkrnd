@@ -26,8 +26,9 @@ function createMatchmakingService({ io, maxQueueUsers, store = createMemoryStore
         return partnerId;
     }
 
-    async function findPartnerFor(socketId) {
-        const result = await store.claimOrEnqueue(socketId, maxQueueUsers);
+    // excludeId: a socket that must not be picked as the partner this time (e.g. the one just skipped).
+    async function findPartnerFor(socketId, { excludeId = null } = {}) {
+        const result = await store.claimOrEnqueue(socketId, maxQueueUsers, excludeId);
 
         if (result.status === 'full') {
             emitServerNotice(socketId, {
