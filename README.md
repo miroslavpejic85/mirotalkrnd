@@ -29,6 +29,7 @@
 - Device selection
 - Virtual background support (blur and image)
 - Queue, capacity, and anti-spam limits
+- Can match users across multiple servers (optional)
 - Mobile-friendly UI
 
 ## 🚀 Quick start
