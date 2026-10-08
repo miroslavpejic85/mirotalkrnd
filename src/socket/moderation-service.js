@@ -2,6 +2,13 @@ const { STRIKE_TTL_SECONDS } = require('./matchmaking-store/constants');
 
 const MAX_BAN_SECONDS = 30 * 24 * 60 * 60;
 
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
+
+function yellow(text) {
+    return process.stdout.isTTY && !process.env.NO_COLOR ? `${YELLOW}${text}${RESET}` : text;
+}
+
 function formatDuration(seconds) {
     return seconds % 3600 === 0 ? `${seconds / 3600}h` : `${Math.round(seconds / 60)}m`;
 }
@@ -64,9 +71,11 @@ function createModerationService({
         }
 
         log(
-            `[${new Date().toISOString()}] [moderation] BANNED ip=${ip} duration=${formatDuration(durationSeconds)} ` +
-                `until=${new Date(expiresAt).toISOString()} strike=${strikes} reporters=${reporterCount} ` +
-                `disconnectedSockets=${sockets.length}`
+            yellow(
+                `[${new Date().toISOString()}] [moderation] BANNED ip=${ip} duration=${formatDuration(durationSeconds)} ` +
+                    `until=${new Date(expiresAt).toISOString()} strike=${strikes} reporters=${reporterCount} ` +
+                    `disconnectedSockets=${sockets.length}`
+            )
         );
         return { expiresAt };
     }
@@ -106,4 +115,4 @@ function createModerationService({
     return { enabled, rememberPair, forgetPartner, getBan, report };
 }
 
-module.exports = { createModerationService };
+module.exports = { createModerationService, yellow };

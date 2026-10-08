@@ -1,3 +1,5 @@
+const { yellow } = require('./moderation-service');
+
 function normalizeIp(ip) {
     if (!ip) {
         return 'unknown';
@@ -132,7 +134,9 @@ function registerSocketHandlers({
                 const ban = await moderation.getBan(banIp);
                 if (ban) {
                     console.warn(
-                        `[${new Date().toISOString()}] [moderation] connection rejected (banned) ip=${banIp} until=${new Date(ban.expiresAt).toISOString()}`
+                        yellow(
+                            `[${new Date().toISOString()}] [moderation] connection rejected (banned) ip=${banIp} until=${new Date(ban.expiresAt).toISOString()}`
+                        )
                     );
                     const error = new Error('You are banned.');
                     error.data = { code: 'BANNED', expiresAt: ban.expiresAt };
