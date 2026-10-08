@@ -16,6 +16,7 @@ import {
 import { loadRtcConfig } from './services/config-service.js';
 import { MediaManager } from './services/media-manager.js';
 import { SignalingService } from './services/signaling-service.js';
+import { SoundService } from './services/sound-service.js';
 import { WebRtcManager } from './services/webrtc-manager.js';
 
 export class RandomVideoChatApp {
@@ -56,9 +57,11 @@ export class RandomVideoChatApp {
             backgroundImageBtn: document.getElementById('backgroundImageBtn'),
             backgroundImageInput: document.getElementById('backgroundImageInput'),
             backgroundImageName: document.getElementById('backgroundImageName'),
+            soundEffectsToggle: document.getElementById('soundEffectsToggle'),
         };
 
         this.state = createInitialState();
+        this.sounds = new SoundService();
 
         this.signaling = new SignalingService(this.socket);
         this.webrtc = new WebRtcManager({
@@ -87,6 +90,7 @@ export class RandomVideoChatApp {
         this.media.setDeviceSelectPlaceholders();
         this.el.backgroundModeSelect.value = this.media.getBackgroundMode();
         this.syncBackgroundImagePickerUi();
+        this.el.soundEffectsToggle.checked = this.sounds.isEnabled();
         this.updateMediaButtons();
         this.setConnectionState('idle', 'Idle');
         this.setEnableSoundVisible(false);
@@ -354,6 +358,7 @@ export class RandomVideoChatApp {
     }
 
     async startMatching() {
+        this.sounds.prime();
         if (this.state.serverAtCapacity) {
             this.setCapacityModalVisible(true, 'Server is currently full. Please try again shortly.');
             return;
@@ -483,6 +488,10 @@ export class RandomVideoChatApp {
             }
         });
 
+        this.el.soundEffectsToggle.addEventListener('change', (event) => {
+            this.sounds.setEnabled(event.target.checked);
+        });
+
         this.el.capacityRetryBtn.addEventListener('click', () => {
             this.setCapacityModalVisible(false);
             this.socket.connect();
@@ -554,6 +563,7 @@ export class RandomVideoChatApp {
 
     bindSocketEvents() {
         this.signaling.on('queue-update', () => {
+            this.sounds.play('waiting');
             this.setQueueState(true);
             this.setConnectionState('waiting', 'Waiting');
             this.setStatus('Waiting in queue for an available partner...');
@@ -562,6 +572,7 @@ export class RandomVideoChatApp {
 
         this.signaling.on('matched', async ({ initiator }) => {
             try {
+                this.sounds.play('connected');
                 this.setQueueState(false);
                 this.setConnectionState('connected', 'Connected');
                 this.setStatus('Connected! Say hi 👋 (if no sound, tap once)');
@@ -621,6 +632,7 @@ export class RandomVideoChatApp {
         });
 
         this.signaling.on('partner-disconnected', ({ reason }) => {
+            this.sounds.play('left');
             this.webrtc.cleanupPeerConnection();
             this.setQueueState(true);
 

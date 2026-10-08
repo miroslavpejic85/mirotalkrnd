@@ -423,6 +423,74 @@ body {
     opacity: 0.6;
 }
 
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.76rem;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 38px;
+    height: 22px;
+}
+
+.switch input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.switch-track {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel-soft);
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+    pointer-events: none;
+}
+
+.switch-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.switch input:checked + .switch-track {
+    background: var(--primary);
+    border-color: transparent;
+}
+
+.switch input:checked + .switch-track::after {
+    transform: translateX(16px);
+    background: #fff;
+}
+
+.switch input:focus-visible + .switch-track {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
 .background-image-picker-row {
     display: flex;
     align-items: center;

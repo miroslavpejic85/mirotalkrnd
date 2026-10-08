@@ -28,6 +28,7 @@
 - Mic/camera toggle + hide self preview
 - Device selection
 - Virtual background support (blur and image)
+- Sound cues for waiting, connected, and partner left (can be turned off in settings)
 - Queue, capacity, and anti-spam limits
 - Can match users across multiple servers (optional)
 - Mobile-friendly UI
