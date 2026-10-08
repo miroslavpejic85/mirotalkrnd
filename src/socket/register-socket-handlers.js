@@ -28,12 +28,16 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
     const { maxActiveUsers, maxConnectionsPerIp, skipRateLimitPer10s } = limits;
 
     function safeHandler(eventName, handler) {
-        return (...args) => {
+        const handleError = (error) => {
+            console.error(`Socket handler "${eventName}" failed:`, error);
+            captureException(error, `socket:${eventName}`);
+        };
+
+        return async (...args) => {
             try {
-                return handler(...args);
+                return await handler(...args);
             } catch (error) {
-                console.error(`Socket handler "${eventName}" failed:`, error);
-                captureException(error, `socket:${eventName}`);
+                handleError(error);
             }
         };
     }
@@ -154,15 +158,15 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
 
         socket.on(
             'find-partner',
-            safeHandler('find-partner', () => {
-                matchmaking.unpair(socket.id, 'partner-skipped');
-                matchmaking.findPartnerFor(socket.id);
+            safeHandler('find-partner', async () => {
+                await matchmaking.unpair(socket.id, 'partner-skipped');
+                await matchmaking.findPartnerFor(socket.id);
             })
         );
 
         socket.on(
             'skip-partner',
-            safeHandler('skip-partner', () => {
+            safeHandler('skip-partner', async () => {
                 if (isSkipRateLimited(socket.id)) {
                     socket.emit('server-notice', {
                         code: 'SKIP_RATE_LIMITED',
@@ -173,19 +177,19 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
                     return;
                 }
 
-                const previousPartnerId = matchmaking.unpair(socket.id, 'partner-skipped');
-                matchmaking.findPartnerFor(socket.id);
+                const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-skipped');
+                await matchmaking.findPartnerFor(socket.id);
 
-                if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
-                    matchmaking.findPartnerFor(previousPartnerId);
+                if (previousPartnerId && (await matchmaking.socketExists(previousPartnerId))) {
+                    await matchmaking.findPartnerFor(previousPartnerId);
                 }
             })
         );
 
         socket.on(
             'webrtc-offer',
-            safeHandler('webrtc-offer', (payload) => {
-                const partnerId = matchmaking.getPartnerId(socket.id);
+            safeHandler('webrtc-offer', async (payload) => {
+                const partnerId = await matchmaking.getPartnerId(socket.id);
                 if (!partnerId || !payload?.sdp) {
                     return;
                 }
@@ -195,8 +199,8 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
 
         socket.on(
             'webrtc-answer',
-            safeHandler('webrtc-answer', (payload) => {
-                const partnerId = matchmaking.getPartnerId(socket.id);
+            safeHandler('webrtc-answer', async (payload) => {
+                const partnerId = await matchmaking.getPartnerId(socket.id);
                 if (!partnerId || !payload?.sdp) {
                     return;
                 }
@@ -206,8 +210,8 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
 
         socket.on(
             'webrtc-ice-candidate',
-            safeHandler('webrtc-ice-candidate', (payload) => {
-                const partnerId = matchmaking.getPartnerId(socket.id);
+            safeHandler('webrtc-ice-candidate', async (payload) => {
+                const partnerId = await matchmaking.getPartnerId(socket.id);
                 if (!partnerId || !payload?.candidate) {
                     return;
                 }
@@ -217,12 +221,12 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
 
         socket.on(
             'media-state-update',
-            safeHandler('media-state-update', (payload) => {
+            safeHandler('media-state-update', async (payload) => {
                 if (typeof payload?.isMuted !== 'boolean' || typeof payload?.isCameraOff !== 'boolean') {
                     return;
                 }
 
-                matchmaking.setMediaStateForSocket(socket.id, {
+                await matchmaking.setMediaStateForSocket(socket.id, {
                     isMuted: payload.isMuted,
                     isCameraOff: payload.isCameraOff,
                 });
@@ -231,17 +235,17 @@ function registerSocketHandlers({ io, limits, matchmaking, captureException = ()
 
         socket.on(
             'disconnect',
-            safeHandler('disconnect', (reason) => {
-                matchmaking.removeFromQueue(socket.id);
-                const previousPartnerId = matchmaking.unpair(socket.id, 'partner-left');
+            safeHandler('disconnect', async (reason) => {
                 clearSkipRateLimit(socket.id);
                 untrackSocketForIp(socket.id, clientIp);
-                matchmaking.deleteMediaStateForSocket(socket.id);
-
                 logConnectedUsers('disconnected', socket.id, reason, clientIp);
 
-                if (previousPartnerId && io.sockets.sockets.has(previousPartnerId)) {
-                    matchmaking.findPartnerFor(previousPartnerId);
+                await matchmaking.removeFromQueue(socket.id);
+                const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-left');
+                await matchmaking.deleteMediaStateForSocket(socket.id);
+
+                if (previousPartnerId && (await matchmaking.socketExists(previousPartnerId))) {
+                    await matchmaking.findPartnerFor(previousPartnerId);
                 }
             })
         );

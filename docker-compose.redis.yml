@@ -1,0 +1,17 @@
+# Local Redis for multi-instance matchmaking.
+# Start: docker compose -f docker-compose.redis.yml up -d
+# Then set REDIS_URL=redis://localhost:6379 in .env (or TEST_REDIS_URL to run the Redis tests).
+services:
+    redis:
+        image: redis:7-alpine
+        container_name: mirotalk-rnd-redis
+        # Matchmaking state is short-lived, so persistence is disabled.
+        command: ['redis-server', '--save', '', '--appendonly', 'no']
+        ports:
+            - '127.0.0.1:6379:6379'
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 3s
+            retries: 5
+        restart: unless-stopped

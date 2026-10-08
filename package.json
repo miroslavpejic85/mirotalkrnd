@@ -1,12 +1,13 @@
 {
     "name": "mirotalkrnd",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "description": "Lightweight random peer-to-peer video chat with vanilla JS and Node.js",
     "main": "server.js",
     "type": "commonjs",
     "scripts": {
         "start": "node server.js",
         "dev": "node --watch server.js",
+        "test": "node --test \"test/**/*.test.js\"",
         "lint": "npx prettier --write ."
     },
     "keywords": [
@@ -20,12 +21,15 @@
     "license": "AGPL-3.0-only",
     "dependencies": {
         "@sentry/node": "^11.5.0",
+        "@socket.io/redis-adapter": "^8.3.0",
         "dotenv": "^18.0.6",
         "express": "^5.2.1",
         "express-rate-limit": "^8.7.1",
+        "redis": "^6.3.0",
         "socket.io": "^4.8.4"
     },
     "devDependencies": {
-        "prettier": "3.9.9"
+        "prettier": "3.9.9",
+        "socket.io-client": "^4.8.4"
     }
 }

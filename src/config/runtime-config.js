@@ -282,6 +282,9 @@ function createRuntimeConfig(env) {
             iceServers: buildIceServersFromEnv(env),
         },
         umami: getUmamiConfig(env),
+        redis: {
+            url: trimString(env.REDIS_URL),
+        },
         sentry: {
             enabled: sentryEnabled && Boolean(sentryDsn),
             dsn: sentryDsn,

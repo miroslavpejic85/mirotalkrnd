@@ -83,6 +83,7 @@ Edit `.env` for your needs use [.env.template](.env.template) as reference, then
 
 - `npm start` — start server
 - `npm run dev` — run with watch mode
+- `npm test` — run tests (set `TEST_REDIS_URL=redis://localhost:6379` to also run the two-instance Redis tests)
 
 ## License
 

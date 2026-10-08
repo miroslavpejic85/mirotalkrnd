@@ -15,6 +15,8 @@ const { Server } = require('socket.io');
 const { createHttpRateLimiter } = require('./src/http/create-http-rate-limiter');
 const { registerHttpRoutes } = require('./src/http/register-http-routes');
 const { createMatchmakingService } = require('./src/socket/matchmaking-service');
+const { createMemoryStore } = require('./src/socket/matchmaking-store');
+const { setupRedis } = require('./src/socket/setup-redis');
 const { registerSocketHandlers } = require('./src/socket/register-socket-handlers');
 
 const app = express();
@@ -93,19 +95,35 @@ registerHttpRoutes({
 
 setupExpressErrorHandler(app);
 
-const matchmaking = createMatchmakingService({
-    io,
-    maxQueueUsers: limits.maxQueueUsers,
-});
+async function start() {
+    let store = createMemoryStore();
 
-registerSocketHandlers({
-    io,
-    limits,
-    matchmaking,
-    captureException,
-});
+    if (runtimeConfig.redis.url) {
+        store = await setupRedis({ io, url: runtimeConfig.redis.url });
+        console.log('Redis enabled: matchmaking is shared across all instances using the same REDIS_URL');
+    }
 
-server.listen(port, () => {
-    const protocol = useHttps ? 'https' : 'http';
-    console.log(`${appName} running on ${protocol}://localhost:${port}`);
+    const matchmaking = createMatchmakingService({
+        io,
+        maxQueueUsers: limits.maxQueueUsers,
+        store,
+    });
+
+    registerSocketHandlers({
+        io,
+        limits,
+        matchmaking,
+        captureException,
+    });
+
+    server.listen(port, () => {
+        const protocol = useHttps ? 'https' : 'http';
+        console.log(`${appName} running on ${protocol}://localhost:${port}`);
+    });
+}
+
+start().catch((error) => {
+    console.error(`Failed to start server: ${error.message}`);
+    captureException(error, 'startup');
+    process.exit(1);
 });
