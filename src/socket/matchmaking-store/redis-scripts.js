@@ -39,7 +39,34 @@ end
 return partner
 `;
 
+// Adds a reporter and returns how many different reporters there are. The window starts at the first report.
+const ADD_REPORT_SCRIPT = `
+redis.call('SADD', KEYS[1], ARGV[1])
+if redis.call('TTL', KEYS[1]) < 0 then
+    redis.call('EXPIRE', KEYS[1], ARGV[2])
+end
+return redis.call('SCARD', KEYS[1])
+`;
+
+const INCREMENT_STRIKES_SCRIPT = `
+local strikes = redis.call('INCR', KEYS[1])
+redis.call('EXPIRE', KEYS[1], ARGV[1])
+return strikes
+`;
+
+// Reads and deletes in one step so concurrent reports cannot both use the same record.
+const TAKE_SCRIPT = `
+local value = redis.call('GET', KEYS[1])
+if value then
+    redis.call('DEL', KEYS[1])
+end
+return value
+`;
+
 module.exports = {
+    ADD_REPORT_SCRIPT,
+    INCREMENT_STRIKES_SCRIPT,
+    TAKE_SCRIPT,
     CLAIM_OR_ENQUEUE_SCRIPT,
     PAIR_SCRIPT,
     UNPAIR_SCRIPT,

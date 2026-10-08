@@ -15,6 +15,11 @@ export class SignalingService {
         this.socket.emit('skip-partner');
     }
 
+    // Reports the most recent partner. The server decides who that is; callback receives { ok, code }.
+    emitReportPartner(callback) {
+        this.socket.emit('report-partner', callback);
+    }
+
     emitOffer(sdp) {
         this.socket.emit('webrtc-offer', { sdp });
     }

@@ -17,6 +17,7 @@ const { registerHttpRoutes } = require('./src/http/register-http-routes');
 const { createMatchmakingService } = require('./src/socket/matchmaking-service');
 const { createMemoryStore } = require('./src/socket/matchmaking-store');
 const { setupRedis } = require('./src/socket/setup-redis');
+const { createModerationService } = require('./src/socket/moderation-service');
 const { registerSocketHandlers } = require('./src/socket/register-socket-handlers');
 
 const app = express();
@@ -37,6 +38,7 @@ const {
     limits,
     socketWebsocketOnly,
     skipAvoidSamePartner,
+    moderation: moderationConfig,
 } = runtimeConfig;
 app.set('trust proxy', trustProxy);
 const { apiRateLimitWindowMs, apiRateLimitMaxRequests } = limits;
@@ -94,6 +96,11 @@ registerHttpRoutes({
     apiRateLimiter,
     umami: runtimeConfig.umami,
     sentry: runtimeConfig.sentry,
+    reportingEnabled: Boolean(
+        moderationConfig.reportBanThreshold &&
+        moderationConfig.reportWindowSeconds &&
+        moderationConfig.banDurationSeconds
+    ),
 });
 
 setupExpressErrorHandler(app);
@@ -106,10 +113,13 @@ async function start() {
         console.log('Redis enabled: matchmaking is shared across all instances using the same REDIS_URL');
     }
 
+    const moderation = createModerationService({ io, store, ...moderationConfig });
+
     const matchmaking = createMatchmakingService({
         io,
         maxQueueUsers: limits.maxQueueUsers,
         store,
+        onMatched: ([first, second]) => moderation.rememberPair(first, second),
     });
 
     registerSocketHandlers({
@@ -117,6 +127,8 @@ async function start() {
         limits,
         matchmaking,
         skipAvoidSamePartner,
+        moderation,
+        isTrustedProxy: app.get('trust proxy fn'),
         captureException,
     });
 

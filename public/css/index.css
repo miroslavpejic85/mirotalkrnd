@@ -428,6 +428,11 @@ body {
     line-height: 1.4;
 }
 
+.capacity-modal-card a.btn {
+    justify-content: center;
+    text-decoration: none;
+}
+
 .device-controls {
     display: grid;
     gap: 10px;

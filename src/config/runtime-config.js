@@ -214,6 +214,10 @@ function createRuntimeConfig(env) {
         Number.parseInt(env.API_RATE_LIMIT_MAX_REQUESTS ?? '120', 10)
     );
 
+    const reportBanThreshold = getOptionalPositiveInteger(Number.parseInt(env.REPORT_BAN_THRESHOLD ?? '3', 10));
+    const reportWindowHours = getOptionalPositiveInteger(Number.parseInt(env.REPORT_WINDOW_HOURS ?? '24', 10));
+    const banDurationHours = getOptionalPositiveInteger(Number.parseInt(env.BAN_DURATION_HOURS ?? '24', 10));
+
     const sentryDsn = trimString(env.SENTRY_DSN);
     const sentryEnabled = parseBoolean(env.SENTRY_ENABLED, false);
 
@@ -245,6 +249,26 @@ function createRuntimeConfig(env) {
         skipRateLimitPer10s,
         `Invalid SKIP_RATE_LIMIT_PER_10S value "${env.SKIP_RATE_LIMIT_PER_10S}". Limit disabled. Use a positive integer.`
     );
+    warnInvalidOptionalValue(
+        env,
+        'REPORT_BAN_THRESHOLD',
+        reportBanThreshold,
+        `Invalid REPORT_BAN_THRESHOLD value "${env.REPORT_BAN_THRESHOLD}". Reporting and bans disabled. Use a positive integer.`
+    );
+    if (reportBanThreshold) {
+        warnInvalidOptionalValue(
+            env,
+            'REPORT_WINDOW_HOURS',
+            reportWindowHours,
+            `Invalid REPORT_WINDOW_HOURS value "${env.REPORT_WINDOW_HOURS}". Reporting and bans disabled. Use a positive integer.`
+        );
+        warnInvalidOptionalValue(
+            env,
+            'BAN_DURATION_HOURS',
+            banDurationHours,
+            `Invalid BAN_DURATION_HOURS value "${env.BAN_DURATION_HOURS}". Reporting and bans disabled. Use a positive integer.`
+        );
+    }
     warnInvalidOptionalValue(
         env,
         'API_RATE_LIMIT_WINDOW_MS',
@@ -287,6 +311,11 @@ function createRuntimeConfig(env) {
         },
         socketWebsocketOnly: parseBoolean(env.SOCKET_WEBSOCKET_ONLY, false),
         skipAvoidSamePartner: parseBoolean(env.SKIP_AVOID_SAME_PARTNER, false),
+        moderation: {
+            reportBanThreshold,
+            reportWindowSeconds: reportWindowHours && reportWindowHours * 3600,
+            banDurationSeconds: banDurationHours && banDurationHours * 3600,
+        },
         sentry: {
             enabled: sentryEnabled && Boolean(sentryDsn),
             dsn: sentryDsn,

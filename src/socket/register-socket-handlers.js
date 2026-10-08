@@ -10,16 +10,31 @@ function normalizeIp(ip) {
     return ip;
 }
 
-function getSocketIp(socket) {
+// X-Forwarded-For is client-controlled, so it is only followed through proxies the operator trusts
+// (TRUST_PROXY). Without that, a user could pick any IP, which would defeat IP bans and limits.
+function getSocketIp(socket, isTrustedProxy) {
+    const remoteIp = normalizeIp(socket.handshake.address);
     const forwardedFor = socket.handshake.headers['x-forwarded-for'];
-    if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
-        const firstIp = forwardedFor.split(',')[0]?.trim();
-        if (firstIp) {
-            return normalizeIp(firstIp);
+    if (typeof forwardedFor !== 'string' || !forwardedFor.trim()) {
+        return remoteIp;
+    }
+
+    // Nearest hop first: the connecting address, then X-Forwarded-For from right to left.
+    const addresses = [
+        remoteIp,
+        ...forwardedFor
+            .split(',')
+            .map((address) => normalizeIp(address.trim()))
+            .reverse(),
+    ];
+
+    for (let index = 0; index < addresses.length - 1; index += 1) {
+        if (!isTrustedProxy(addresses[index], index)) {
+            return addresses[index];
         }
     }
 
-    return normalizeIp(socket.handshake.address);
+    return addresses[addresses.length - 1];
 }
 
 function registerSocketHandlers({
@@ -27,6 +42,8 @@ function registerSocketHandlers({
     limits,
     matchmaking,
     skipAvoidSamePartner = false,
+    moderation = null,
+    isTrustedProxy = () => false,
     captureException = () => {},
 }) {
     const socketsByIp = new Map();
@@ -108,8 +125,32 @@ function registerSocketHandlers({
         );
     }
 
+    if (moderation?.enabled) {
+        io.use(async (socket, next) => {
+            try {
+                const banIp = getSocketIp(socket, isTrustedProxy);
+                const ban = await moderation.getBan(banIp);
+                if (ban) {
+                    console.warn(
+                        `[${new Date().toISOString()}] [moderation] connection rejected (banned) ip=${banIp} until=${new Date(ban.expiresAt).toISOString()}`
+                    );
+                    const error = new Error('You are banned.');
+                    error.data = { code: 'BANNED', expiresAt: ban.expiresAt };
+                    next(error);
+                    return;
+                }
+            } catch (error) {
+                // Fail open: a broken ban store must not lock everyone out.
+                console.error('Ban check failed:', error);
+                captureException(error, 'socket:ban-check');
+            }
+
+            next();
+        });
+    }
+
     io.use((socket, next) => {
-        const socketIp = getSocketIp(socket);
+        const socketIp = getSocketIp(socket, isTrustedProxy);
 
         if (!maxActiveUsers) {
             if (!maxConnectionsPerIp) {
@@ -241,6 +282,20 @@ function registerSocketHandlers({
         );
 
         socket.on(
+            'report-partner',
+            safeHandler('report-partner', async (ack) => {
+                const reply = typeof ack === 'function' ? ack : () => {};
+                if (!moderation?.enabled) {
+                    reply({ ok: false, code: 'DISABLED' });
+                    return;
+                }
+
+                const result = await moderation.report(socket.id, clientIp);
+                reply(result === 'recorded' ? { ok: true } : { ok: false, code: 'NO_PARTNER' });
+            })
+        );
+
+        socket.on(
             'disconnect',
             safeHandler('disconnect', async (reason) => {
                 clearSkipRateLimit(socket.id);
@@ -250,6 +305,7 @@ function registerSocketHandlers({
                 await matchmaking.removeFromQueue(socket.id);
                 const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-left');
                 await matchmaking.deleteMediaStateForSocket(socket.id);
+                await moderation?.forgetPartner(socket.id);
 
                 if (previousPartnerId && (await matchmaking.socketExists(previousPartnerId))) {
                     await matchmaking.findPartnerFor(previousPartnerId);

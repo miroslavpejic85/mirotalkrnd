@@ -40,6 +40,9 @@ export class RandomVideoChatApp {
             capacityModal: document.getElementById('capacityModal'),
             capacityMessage: document.getElementById('capacityMessage'),
             capacityRetryBtn: document.getElementById('capacityRetryBtn'),
+            bannedModal: document.getElementById('bannedModal'),
+            bannedMessage: document.getElementById('bannedMessage'),
+            reportBtn: document.getElementById('reportBtn'),
             enableSoundBtn: document.getElementById('enableSoundBtn'),
             startBtn: document.getElementById('startBtn'),
             settingsBtn: document.getElementById('settingsBtn'),
@@ -60,6 +63,7 @@ export class RandomVideoChatApp {
         };
 
         this.state = createInitialState();
+        this.reportingEnabled = document.querySelector('meta[name="reporting-enabled"]')?.content === 'true';
         this.sounds = new SoundService();
 
         this.signaling = new SignalingService(this.socket);
@@ -96,6 +100,7 @@ export class RandomVideoChatApp {
         this.setSettingsPanelVisible(false);
         this.setControlsState({ mediaReady: false, searching: false, canSkip: false });
         this.syncRemoteMediaUi();
+        this.syncReportUi();
         renderLucideIcons();
         this.initializeTooltips();
     }
@@ -113,6 +118,8 @@ export class RandomVideoChatApp {
         this.el.backgroundImageBtn.setAttribute('data-tippy-placement', 'left');
         this.el.enableSoundBtn.setAttribute('data-tippy-content', this.el.enableSoundBtn.title);
         this.el.enableSoundBtn.setAttribute('data-tippy-placement', 'top');
+        this.el.reportBtn.setAttribute('data-tippy-content', this.el.reportBtn.title);
+        this.el.reportBtn.setAttribute('data-tippy-placement', 'top');
         this.el.endSessionBtn.setAttribute('data-tippy-content', this.el.endSessionBtn.title);
         this.el.endSessionBtn.setAttribute('data-tippy-placement', 'top');
         this.el.remoteMicStatus.setAttribute('data-tippy-content', this.el.remoteMicStatus.getAttribute('aria-label'));
@@ -154,9 +161,64 @@ export class RandomVideoChatApp {
     setControlsState(options) {
         const mergedOptions = {
             ...options,
-            startDisabled: this.state.serverAtCapacity || Boolean(options?.startDisabled),
+            startDisabled: this.state.serverAtCapacity || this.state.isBanned || Boolean(options?.startDisabled),
         };
         setControlsState(this.el, this.state, mergedOptions);
+    }
+
+    // Reporting stays available after a partner leaves or is skipped, until the next match replaces them.
+    setCanReport(value) {
+        this.state.canReport = value;
+        this.syncReportUi();
+    }
+
+    syncReportUi() {
+        this.el.reportBtn.hidden = !this.reportingEnabled;
+        this.el.reportBtn.disabled = !this.state.canReport;
+    }
+
+    reportPartner() {
+        if (!this.state.canReport) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            'Report your partner for inappropriate or illegal content? Only report real violations.'
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        this.setCanReport(false);
+        this.signaling.emitReportPartner((response) => {
+            this.setStatus(response?.ok ? 'Thanks, your report was sent.' : 'There is nobody to report right now.');
+        });
+    }
+
+    showBanned(expiresAt) {
+        this.state.isBanned = true;
+        this.webrtc.cleanupPeerConnection();
+        this.media.stopLocalMedia();
+        this.setStartedMatching(false);
+        this.setQueueState(false);
+        this.setCanReport(false);
+        this.setConnectionState('error', 'Banned');
+        this.setStatus('You are banned.');
+        this.setControlsState({ mediaReady: false, searching: false, canSkip: false });
+
+        const endDate = new Date(expiresAt);
+        const until = Number.isNaN(endDate.getTime()) ? '' : ` Your ban ends on ${endDate.toLocaleString()}.`;
+        this.el.bannedMessage.textContent = `You have been banned for violating our rules (illegal or inappropriate content reported by multiple users).${until}`;
+        this.el.bannedModal.hidden = false;
+    }
+
+    handleBannedError(error) {
+        if (error?.data?.code !== 'BANNED') {
+            return false;
+        }
+
+        this.showBanned(error.data.expiresAt);
+        return true;
     }
 
     syncRemoteMediaUi() {
@@ -387,6 +449,7 @@ export class RandomVideoChatApp {
         this.state.switchingDevices = false;
         this.setStartedMatching(false);
         this.setQueueState(false);
+        this.setCanReport(false);
         this.resetRemoteMediaState();
         this.syncLocalMediaUi();
         this.updateMediaButtons();
@@ -410,7 +473,7 @@ export class RandomVideoChatApp {
                 await this.startMatching();
                 this.setSettingsPanelVisible(false);
             } catch (error) {
-                if (this.handleConnectionLimitError(error)) {
+                if (this.handleBannedError(error) || this.handleConnectionLimitError(error)) {
                     return;
                 }
 
@@ -505,6 +568,9 @@ export class RandomVideoChatApp {
             this.syncLocalMediaUi();
             this.updateMediaButtons();
         });
+        this.el.reportBtn.addEventListener('click', () => {
+            this.reportPartner();
+        });
         this.el.endSessionBtn.addEventListener('click', () => {
             this.endSession();
         });
@@ -567,6 +633,7 @@ export class RandomVideoChatApp {
         this.signaling.on('matched', async ({ initiator }) => {
             try {
                 this.sounds.play('connected');
+                this.setCanReport(true);
                 this.setQueueState(false);
                 this.setConnectionState('connected', 'Connected');
                 this.setStatus('Connected! Say hi 👋 (if no sound, tap once)');
@@ -644,17 +711,32 @@ export class RandomVideoChatApp {
             this.setRemoteMediaState({ isMuted, isCameraOff });
         });
 
-        this.signaling.on('disconnect', () => {
+        this.signaling.on('banned', ({ expiresAt }) => {
+            this.showBanned(expiresAt);
+        });
+
+        this.signaling.on('disconnect', (reason) => {
+            if (this.state.isBanned) {
+                return;
+            }
+
             if (this.state.userEndedSession) {
                 this.state.userEndedSession = false;
                 return;
             }
 
+            this.setCanReport(false);
             this.webrtc.cleanupPeerConnection();
             this.setQueueState(false);
             this.setConnectionState('reconnecting', 'Reconnecting');
             this.setStatus('Disconnected from server. Reconnecting...');
             this.setControlsState({ mediaReady: Boolean(this.state.localStream), searching: true });
+
+            // The server closed the connection (a ban), and the client does not retry in that case.
+            // Connecting again lets the server answer with the ban details.
+            if (reason === 'io server disconnect') {
+                this.socket.connect();
+            }
         });
 
         this.signaling.on('connect', () => {
@@ -670,6 +752,9 @@ export class RandomVideoChatApp {
         });
 
         this.signaling.on('connect_error', (error) => {
+            if (this.handleBannedError(error)) {
+                return;
+            }
             this.handleConnectionLimitError(error);
         });
 

@@ -12,6 +12,7 @@
         <meta property="og:url" content="{{OG_URL}}" />
         <meta name="twitter:card" content="{{TWITTER_CARD}}" />
         <meta name="socket-transports" content="{{SOCKET_TRANSPORTS}}" />
+        <meta name="reporting-enabled" content="{{REPORTING_ENABLED}}" />
         <meta name="twitter:title" content="{{OG_TITLE}}" />
         <meta name="twitter:description" content="{{OG_DESCRIPTION}}" />
         <meta name="twitter:image" content="{{OG_IMAGE}}" />
@@ -169,6 +170,17 @@
                     >
                         <i data-lucide="volume-2" aria-hidden="true"></i>
                     </button>
+                    <button
+                        id="reportBtn"
+                        class="btn icon-btn"
+                        type="button"
+                        hidden
+                        disabled
+                        aria-label="Report partner"
+                        title="Report partner"
+                    >
+                        <i data-lucide="flag" aria-hidden="true"></i>
+                    </button>
                     <!-- Chat is not supported yet -->
                     <button id="chatBtn" class="btn icon-btn" type="button" hidden aria-label="Chat" title="Chat">
                         <i data-lucide="message-square" aria-hidden="true"></i>
@@ -211,6 +223,16 @@
             <p id="onboardingHint" class="sr-only">
                 Open media settings to prepare camera and microphone, then start matching.
             </p>
+
+            <div id="bannedModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
+                <div class="capacity-modal-card">
+                    <h2>You are banned 🚫</h2>
+                    <p id="bannedMessage">
+                        You have been banned for violating our rules, including illegal or inappropriate content.
+                    </p>
+                    <a class="btn pill-btn primary-btn" href="{{REPORT_EMAIL_LINK}}">Contact us</a>
+                </div>
+            </div>
 
             <div id="capacityModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
                 <div class="capacity-modal-card">

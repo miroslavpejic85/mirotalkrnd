@@ -19,6 +19,8 @@ export function createInitialState() {
         hasLoadedRtcConfig: false,
         serverAtCapacity: false,
         userEndedSession: false,
+        canReport: false,
+        isBanned: false,
         rtcConfig: {
             iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }],
         },

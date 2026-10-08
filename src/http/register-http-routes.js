@@ -18,6 +18,8 @@ const TWITTER_CARD_PLACEHOLDER = '{{TWITTER_CARD}}';
 const SOCKET_TRANSPORTS_PLACEHOLDER = '{{SOCKET_TRANSPORTS}}';
 const ANALYTICS_SCRIPT_PLACEHOLDER = '{{ANALYTICS_SCRIPT}}';
 const PRIVACY_NOTICES_PLACEHOLDER = '{{PRIVACY_NOTICES}}';
+const REPORT_NOTICE_PLACEHOLDER = '{{REPORT_NOTICE}}';
+const REPORTING_ENABLED_PLACEHOLDER = '{{REPORTING_ENABLED}}';
 function renderHtmlTemplate(staticDirPath, fileName, replacements, rawReplacements = {}) {
     const templatePath = path.join(staticDirPath, fileName);
     const template = fs.readFileSync(templatePath, 'utf8');
@@ -48,6 +50,7 @@ function registerHttpRoutes({
     apiRateLimiter,
     umami,
     sentry,
+    reportingEnabled = false,
 }) {
     const { ogTitle, ogDescription, ogImage, ogUrl, twitterCard } = socialMeta;
     const templateReplacements = {
@@ -63,13 +66,22 @@ function registerHttpRoutes({
         [TWITTER_CARD_PLACEHOLDER]: twitterCard,
         // Empty keeps the Socket.IO default (long-polling, then WebSocket upgrade).
         [SOCKET_TRANSPORTS_PLACEHOLDER]: socketWebsocketOnly ? 'websocket' : '',
+        [REPORTING_ENABLED_PLACEHOLDER]: String(reportingEnabled),
     };
     const rawReplacements = {
         [ANALYTICS_SCRIPT_PLACEHOLDER]: buildUmamiScriptTag(umami),
         [PRIVACY_NOTICES_PLACEHOLDER]: buildPrivacyNotices({
             umamiEnabled: Boolean(umami?.enabled),
             sentryEnabled: Boolean(sentry?.enabled),
+            reportingEnabled,
         }),
+        [REPORT_NOTICE_PLACEHOLDER]: reportingEnabled
+            ? `<p>
+                While connected, use the Report button to report your partner. When several different users report the
+                same person within a short period, their IP address is temporarily banned and repeat offenders are banned
+                for longer. Please only report real violations.
+            </p>`
+            : '',
     };
     const render = (fileName) => renderHtmlTemplate(staticDirPath, fileName, templateReplacements, rawReplacements);
     const indexHtml = render('pages/index.html');

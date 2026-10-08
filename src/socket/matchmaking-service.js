@@ -1,14 +1,19 @@
 const { createMemoryStore } = require('./matchmaking-store');
 
-function createMatchmakingService({ io, maxQueueUsers, store = createMemoryStore() }) {
+// onMatched receives [{ id, ip }, { id, ip }] for every new pair.
+function createMatchmakingService({ io, maxQueueUsers, store = createMemoryStore(), onMatched = null }) {
     function emitServerNotice(socketId, payload) {
         io.to(socketId).emit('server-notice', payload);
     }
 
     // Also finds sockets connected to other instances when the Redis adapter is enabled.
+    async function fetchSocket(socketId) {
+        const [socket] = await io.in(socketId).fetchSockets();
+        return socket ?? null;
+    }
+
     async function socketExists(socketId) {
-        const sockets = await io.in(socketId).fetchSockets();
-        return sockets.length > 0;
+        return Boolean(await fetchSocket(socketId));
     }
 
     function removeFromQueue(socketId) {
@@ -49,10 +54,9 @@ function createMatchmakingService({ io, maxQueueUsers, store = createMemoryStore
 
         // Checked after pairing: a socket that left earlier is gone by now, and one that leaves later
         // finds the pair and notifies its partner. Checking before pairing would leave a gap.
-        const [requesterConnected, partnerConnected] = await Promise.all([
-            socketExists(socketId),
-            socketExists(partnerId),
-        ]);
+        const [requesterSocket, partnerSocket] = await Promise.all([fetchSocket(socketId), fetchSocket(partnerId)]);
+        const requesterConnected = Boolean(requesterSocket);
+        const partnerConnected = Boolean(partnerSocket);
 
         if (!requesterConnected || !partnerConnected) {
             await store.unpair(socketId);
@@ -63,6 +67,18 @@ function createMatchmakingService({ io, maxQueueUsers, store = createMemoryStore
                 await findPartnerFor(partnerId);
             }
             return;
+        }
+
+        if (onMatched) {
+            try {
+                await onMatched([
+                    { id: socketId, ip: requesterSocket.data?.clientIp },
+                    { id: partnerId, ip: partnerSocket.data?.clientIp },
+                ]);
+            } catch (error) {
+                // Matching must not fail because moderation bookkeeping did.
+                console.error('onMatched hook failed:', error);
+            }
         }
 
         io.to(socketId).emit('matched', { partnerId, initiator: true });

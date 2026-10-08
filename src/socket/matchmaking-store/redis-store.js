@@ -1,10 +1,21 @@
 const { DEFAULT_MEDIA_STATE, STATE_TTL_SECONDS } = require('./constants');
-const { CLAIM_OR_ENQUEUE_SCRIPT, PAIR_SCRIPT, UNPAIR_SCRIPT } = require('./redis-scripts');
+const {
+    ADD_REPORT_SCRIPT,
+    CLAIM_OR_ENQUEUE_SCRIPT,
+    INCREMENT_STRIKES_SCRIPT,
+    PAIR_SCRIPT,
+    TAKE_SCRIPT,
+    UNPAIR_SCRIPT,
+} = require('./redis-scripts');
 
 function createRedisStore({ client, keyPrefix = 'mirotalkrnd:' }) {
     const queueKey = `${keyPrefix}queue`;
     const partnerPrefix = `${keyPrefix}partner:`;
     const mediaPrefix = `${keyPrefix}media:`;
+    const lastPartnerPrefix = `${keyPrefix}last-partner:`;
+    const reportPrefix = `${keyPrefix}reports:`;
+    const banPrefix = `${keyPrefix}ban:`;
+    const strikePrefix = `${keyPrefix}strikes:`;
 
     function parseEnqueueResult([status, value]) {
         if (status === 'claimed') {
@@ -67,6 +78,56 @@ function createRedisStore({ client, keyPrefix = 'mirotalkrnd:' }) {
 
         async deleteMediaState(socketId) {
             await client.del(`${mediaPrefix}${socketId}`);
+        },
+
+        async setLastPartner(socketId, partner) {
+            await client.set(`${lastPartnerPrefix}${socketId}`, JSON.stringify(partner), { EX: STATE_TTL_SECONDS });
+        },
+
+        async takeLastPartner(socketId) {
+            const value = await client.eval(TAKE_SCRIPT, { keys: [`${lastPartnerPrefix}${socketId}`], arguments: [] });
+            if (!value) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(value);
+            } catch {
+                return null;
+            }
+        },
+
+        async deleteLastPartner(socketId) {
+            await client.del(`${lastPartnerPrefix}${socketId}`);
+        },
+
+        async addReport(ip, reporterIp, windowSeconds) {
+            const count = await client.eval(ADD_REPORT_SCRIPT, {
+                keys: [`${reportPrefix}${ip}`],
+                arguments: [reporterIp, String(windowSeconds)],
+            });
+            return Number(count);
+        },
+
+        async clearReports(ip) {
+            await client.del(`${reportPrefix}${ip}`);
+        },
+
+        async setBan(ip, expiresAtMs, ttlSeconds) {
+            await client.set(`${banPrefix}${ip}`, String(expiresAtMs), { EX: ttlSeconds });
+        },
+
+        async getBan(ip) {
+            const value = await client.get(`${banPrefix}${ip}`);
+            return value ? Number(value) : null;
+        },
+
+        async incrementStrikes(ip, ttlSeconds) {
+            const strikes = await client.eval(INCREMENT_STRIKES_SCRIPT, {
+                keys: [`${strikePrefix}${ip}`],
+                arguments: [String(ttlSeconds)],
+            });
+            return Number(strikes);
         },
     };
 }
