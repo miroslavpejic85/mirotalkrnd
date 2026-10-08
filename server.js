@@ -35,6 +35,7 @@ const {
     sslCertPath,
     rtcConfig,
     limits,
+    socketWebsocketOnly,
 } = runtimeConfig;
 app.set('trust proxy', trustProxy);
 const { apiRateLimitWindowMs, apiRateLimitMaxRequests } = limits;
@@ -67,7 +68,7 @@ function createTransportServer() {
 }
 
 const server = createTransportServer();
-const io = new Server(server);
+const io = new Server(server, socketWebsocketOnly ? { transports: ['websocket'] } : undefined);
 
 if (appOffline) {
     io.use((_, next) => {
@@ -88,6 +89,7 @@ registerHttpRoutes({
     offlineMessage,
     socialMeta,
     rtcConfig,
+    socketWebsocketOnly,
     apiRateLimiter,
     umami: runtimeConfig.umami,
     sentry: runtimeConfig.sentry,

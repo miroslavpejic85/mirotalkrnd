@@ -15,6 +15,7 @@ const OG_DESCRIPTION_PLACEHOLDER = '{{OG_DESCRIPTION}}';
 const OG_IMAGE_PLACEHOLDER = '{{OG_IMAGE}}';
 const OG_URL_PLACEHOLDER = '{{OG_URL}}';
 const TWITTER_CARD_PLACEHOLDER = '{{TWITTER_CARD}}';
+const SOCKET_TRANSPORTS_PLACEHOLDER = '{{SOCKET_TRANSPORTS}}';
 const ANALYTICS_SCRIPT_PLACEHOLDER = '{{ANALYTICS_SCRIPT}}';
 const PRIVACY_NOTICES_PLACEHOLDER = '{{PRIVACY_NOTICES}}';
 function renderHtmlTemplate(staticDirPath, fileName, replacements, rawReplacements = {}) {
@@ -43,6 +44,7 @@ function registerHttpRoutes({
     offlineMessage,
     socialMeta,
     rtcConfig,
+    socketWebsocketOnly = false,
     apiRateLimiter,
     umami,
     sentry,
@@ -59,6 +61,8 @@ function registerHttpRoutes({
         [OG_IMAGE_PLACEHOLDER]: ogImage,
         [OG_URL_PLACEHOLDER]: ogUrl,
         [TWITTER_CARD_PLACEHOLDER]: twitterCard,
+        // Empty keeps the Socket.IO default (long-polling, then WebSocket upgrade).
+        [SOCKET_TRANSPORTS_PLACEHOLDER]: socketWebsocketOnly ? 'websocket' : '',
     };
     const rawReplacements = {
         [ANALYTICS_SCRIPT_PLACEHOLDER]: buildUmamiScriptTag(umami),

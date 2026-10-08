@@ -20,7 +20,8 @@ import { WebRtcManager } from './services/webrtc-manager.js';
 
 export class RandomVideoChatApp {
     constructor() {
-        this.socket = io();
+        const transports = document.querySelector('meta[name="socket-transports"]')?.content;
+        this.socket = transports ? io({ transports: transports.split(',') }) : io();
 
         this.el = {
             videoLayout: document.getElementById('videoLayout'),
