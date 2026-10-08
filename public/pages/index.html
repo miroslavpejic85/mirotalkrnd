@@ -233,11 +233,9 @@
                 aria-describedby="reportModalText"
                 hidden
             >
-                <div class="capacity-modal-card">
-                    <h2 id="reportModalTitle">
-                        <i data-lucide="flag" class="modal-title-icon" aria-hidden="true"></i>
-                        Report this partner?
-                    </h2>
+                <div class="capacity-modal-card modal-warning">
+                    <div class="modal-icon" aria-hidden="true"><i data-lucide="flag"></i></div>
+                    <h2 id="reportModalTitle">Report this partner?</h2>
                     <p id="reportModalText">
                         Report them if they showed nudity, harassment or anything illegal. The other person will not
                         know who reported them, and no video or screenshot is sent. If several different users report
@@ -250,12 +248,18 @@
                 </div>
             </div>
 
-            <div id="bannedModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
-                <div class="capacity-modal-card">
-                    <h2>
-                        <i data-lucide="ban" class="modal-title-icon" aria-hidden="true"></i>
-                        You are banned
-                    </h2>
+            <div
+                id="bannedModal"
+                class="capacity-modal"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="bannedModalTitle"
+                aria-describedby="bannedMessage"
+                hidden
+            >
+                <div class="capacity-modal-card modal-danger">
+                    <div class="modal-icon" aria-hidden="true"><i data-lucide="ban"></i></div>
+                    <h2 id="bannedModalTitle">You are banned</h2>
                     <p id="bannedMessage">
                         You have been banned for violating our rules, including illegal or inappropriate content.
                     </p>
@@ -263,13 +267,22 @@
                 </div>
             </div>
 
-            <div id="capacityModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
+            <div
+                id="capacityModal"
+                class="capacity-modal"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="capacityModalTitle"
+                aria-describedby="capacityMessage"
+                hidden
+            >
                 <div class="capacity-modal-card">
-                    <h2>We’re full right now 🙏</h2>
+                    <div class="modal-icon" aria-hidden="true"><i data-lucide="users"></i></div>
+                    <h2 id="capacityModalTitle">We’re full right now</h2>
                     <p id="capacityMessage">
                         All chat slots are currently busy. Please try again in a minute, we’ll be happy to connect you.
                     </p>
-                    <button id="capacityRetryBtn" class="btn primary-btn" type="button">Try again</button>
+                    <button id="capacityRetryBtn" class="btn pill-btn primary-btn" type="button">Try again</button>
                 </div>
             </div>
         </div>
