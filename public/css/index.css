@@ -292,6 +292,7 @@ body {
 }
 
 .video-avatar {
+    position: relative;
     width: 76px;
     height: 76px;
     border-radius: 999px;
@@ -303,8 +304,8 @@ body {
 }
 
 .video-avatar svg {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     stroke: currentColor;
     fill: none;
     stroke-width: 1.75;
@@ -312,8 +313,29 @@ body {
     stroke-linejoin: round;
 }
 
-.remote-avatar-overlay span,
-.local-avatar-overlay span {
+.video-avatar .video-avatar-badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 99, 125, 0.55);
+    background: #2d1721;
+    box-shadow: 0 0 0 2px #050910;
+    color: #ff8ba0;
+}
+
+.video-avatar .video-avatar-badge svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.2;
+}
+
+.remote-avatar-overlay > span,
+.local-avatar-overlay > span {
     font-size: 0.8rem;
     letter-spacing: 0.2px;
     color: rgba(156, 171, 199, 0.95);

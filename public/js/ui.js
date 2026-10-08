@@ -79,14 +79,12 @@ export function setSelfPreviewLayout(el, hidden) {
 export function updateRemoteMediaState(el, state, { hasPartner = false, hasRemoteStream = false } = {}) {
     const showMicOff = hasPartner && state.remotePeerMuted;
     const showCameraOff = hasPartner && state.remotePeerCameraOff;
-    const showAnyStatus = showMicOff || showCameraOff;
     const showWaitingPlaceholder = !hasPartner || (!hasRemoteStream && !showCameraOff);
     const isSearchingForPartner = showWaitingPlaceholder && state.hasStartedMatching && state.inQueue;
     const placeholderText = isSearchingForPartner ? 'Looking for a partner...' : 'Waiting for partner...';
 
-    el.remoteMediaStatus.hidden = !showAnyStatus;
+    el.remoteMediaStatus.hidden = !showMicOff;
     el.remoteMicStatus.hidden = !showMicOff;
-    el.remoteCameraStatus.hidden = !showCameraOff;
     el.remoteAvatarOverlay.hidden = !showCameraOff;
     el.remotePlaceholder.style.display = showWaitingPlaceholder ? 'grid' : 'none';
     el.remotePlaceholder.classList.toggle('is-searching', isSearchingForPartner);

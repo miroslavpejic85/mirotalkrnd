@@ -77,7 +77,12 @@
                     <span class="video-header">You</span>
                     <video id="localVideo" autoplay playsinline muted></video>
                     <div id="localAvatarOverlay" class="local-avatar-overlay" hidden>
-                        <div class="video-avatar"><i data-lucide="video-off" aria-hidden="true"></i></div>
+                        <div class="video-avatar">
+                            <i data-lucide="user" aria-hidden="true"></i>
+                            <span class="video-avatar-badge" aria-hidden="true">
+                                <i data-lucide="video-off"></i>
+                            </span>
+                        </div>
                         <span>Camera is off</span>
                     </div>
                 </section>
@@ -95,20 +100,15 @@
                             <i data-lucide="mic-off" aria-hidden="true"></i>
                             <span class="sr-only">Partner microphone is off</span>
                         </span>
-                        <span
-                            id="remoteCameraStatus"
-                            class="remote-media-pill"
-                            hidden
-                            title="Partner camera is off"
-                            aria-label="Partner camera is off"
-                        >
-                            <i data-lucide="video-off" aria-hidden="true"></i>
-                            <span class="sr-only">Partner camera is off</span>
-                        </span>
                     </div>
                     <video id="remoteVideo" autoplay playsinline></video>
                     <div id="remoteAvatarOverlay" class="remote-avatar-overlay" hidden>
-                        <div class="video-avatar"><i data-lucide="video-off" aria-hidden="true"></i></div>
+                        <div class="video-avatar">
+                            <i data-lucide="user" aria-hidden="true"></i>
+                            <span class="video-avatar-badge" aria-hidden="true">
+                                <i data-lucide="video-off"></i>
+                            </span>
+                        </div>
                         <span>Camera is off</span>
                     </div>
                     <div class="video-placeholder" id="remotePlaceholder">

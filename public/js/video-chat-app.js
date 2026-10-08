@@ -33,7 +33,6 @@ export class RandomVideoChatApp {
             remotePlaceholderText: document.getElementById('remotePlaceholderText'),
             remoteMediaStatus: document.getElementById('remoteMediaStatus'),
             remoteMicStatus: document.getElementById('remoteMicStatus'),
-            remoteCameraStatus: document.getElementById('remoteCameraStatus'),
             remoteAvatarOverlay: document.getElementById('remoteAvatarOverlay'),
             statusText: document.getElementById('statusText'),
             connectionBadge: document.getElementById('connectionBadge'),
@@ -118,11 +117,6 @@ export class RandomVideoChatApp {
         this.el.endSessionBtn.setAttribute('data-tippy-placement', 'top');
         this.el.remoteMicStatus.setAttribute('data-tippy-content', this.el.remoteMicStatus.getAttribute('aria-label'));
         this.el.remoteMicStatus.setAttribute('data-tippy-placement', 'left');
-        this.el.remoteCameraStatus.setAttribute(
-            'data-tippy-content',
-            this.el.remoteCameraStatus.getAttribute('aria-label')
-        );
-        this.el.remoteCameraStatus.setAttribute('data-tippy-placement', 'left');
         initTooltips();
     }
 
