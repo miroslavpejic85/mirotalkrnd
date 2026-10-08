@@ -224,9 +224,38 @@
                 Open media settings to prepare camera and microphone, then start matching.
             </p>
 
+            <div
+                id="reportModal"
+                class="capacity-modal"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="reportModalTitle"
+                aria-describedby="reportModalText"
+                hidden
+            >
+                <div class="capacity-modal-card">
+                    <h2 id="reportModalTitle">
+                        <i data-lucide="flag" class="modal-title-icon" aria-hidden="true"></i>
+                        Report this partner?
+                    </h2>
+                    <p id="reportModalText">
+                        Report them if they showed nudity, harassment or anything illegal. The other person will not
+                        know who reported them, and no video or screenshot is sent. If several different users report
+                        the same person, they are temporarily banned. Please only report real violations.
+                    </p>
+                    <div class="modal-actions">
+                        <button id="reportCancelBtn" class="btn pill-btn" type="button">Cancel</button>
+                        <button id="reportConfirmBtn" class="btn pill-btn end-btn" type="button">Report</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="bannedModal" class="capacity-modal" role="alertdialog" aria-modal="true" hidden>
                 <div class="capacity-modal-card">
-                    <h2>You are banned 🚫</h2>
+                    <h2>
+                        <i data-lucide="ban" class="modal-title-icon" aria-hidden="true"></i>
+                        You are banned
+                    </h2>
                     <p id="bannedMessage">
                         You have been banned for violating our rules, including illegal or inappropriate content.
                     </p>

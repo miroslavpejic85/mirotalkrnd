@@ -43,6 +43,9 @@ export class RandomVideoChatApp {
             bannedModal: document.getElementById('bannedModal'),
             bannedMessage: document.getElementById('bannedMessage'),
             reportBtn: document.getElementById('reportBtn'),
+            reportModal: document.getElementById('reportModal'),
+            reportCancelBtn: document.getElementById('reportCancelBtn'),
+            reportConfirmBtn: document.getElementById('reportConfirmBtn'),
             enableSoundBtn: document.getElementById('enableSoundBtn'),
             startBtn: document.getElementById('startBtn'),
             settingsBtn: document.getElementById('settingsBtn'),
@@ -169,6 +172,9 @@ export class RandomVideoChatApp {
     // Reporting stays available after a partner leaves or is skipped, until the next match replaces them.
     setCanReport(value) {
         this.state.canReport = value;
+        if (!value) {
+            this.el.reportModal.hidden = true;
+        }
         this.syncReportUi();
     }
 
@@ -177,15 +183,25 @@ export class RandomVideoChatApp {
         this.el.reportBtn.disabled = !this.state.canReport;
     }
 
-    reportPartner() {
-        if (!this.state.canReport) {
-            return;
+    setReportModalVisible(visible) {
+        this.el.reportModal.hidden = !visible;
+        if (visible) {
+            // Cancel is focused first so pressing Enter by accident does not send a report.
+            this.el.reportCancelBtn.focus();
+        } else if (!this.el.reportBtn.disabled) {
+            this.el.reportBtn.focus();
         }
+    }
 
-        const confirmed = window.confirm(
-            'Report your partner for inappropriate or illegal content? Only report real violations.'
-        );
-        if (!confirmed) {
+    reportPartner() {
+        if (this.state.canReport) {
+            this.setReportModalVisible(true);
+        }
+    }
+
+    confirmReport() {
+        this.setReportModalVisible(false);
+        if (!this.state.canReport) {
             return;
         }
 
@@ -571,6 +587,22 @@ export class RandomVideoChatApp {
         this.el.reportBtn.addEventListener('click', () => {
             this.reportPartner();
         });
+        this.el.reportCancelBtn.addEventListener('click', () => {
+            this.setReportModalVisible(false);
+        });
+        this.el.reportConfirmBtn.addEventListener('click', () => {
+            this.confirmReport();
+        });
+        this.el.reportModal.addEventListener('click', (event) => {
+            if (event.target === this.el.reportModal) {
+                this.setReportModalVisible(false);
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !this.el.reportModal.hidden) {
+                this.setReportModalVisible(false);
+            }
+        });
         this.el.endSessionBtn.addEventListener('click', () => {
             this.endSession();
         });
@@ -633,6 +665,7 @@ export class RandomVideoChatApp {
         this.signaling.on('matched', async ({ initiator }) => {
             try {
                 this.sounds.play('connected');
+                this.setReportModalVisible(false);
                 this.setCanReport(true);
                 this.setQueueState(false);
                 this.setConnectionState('connected', 'Connected');

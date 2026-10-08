@@ -418,14 +418,28 @@ body {
 }
 
 .capacity-modal-card h2 {
-    margin: 0 0 8px;
-    font-size: 1.1rem;
+    margin: 0 0 10px;
+    font-size: 1.4rem;
 }
 
 .capacity-modal-card p {
     margin: 0 0 14px;
     color: var(--muted);
     line-height: 1.4;
+}
+
+.capacity-modal-card h2 .modal-title-icon {
+    width: 26px;
+    height: 26px;
+    margin-right: 8px;
+    vertical-align: -4px;
+    stroke: var(--danger);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 .capacity-modal-card a.btn {
