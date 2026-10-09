@@ -80,7 +80,11 @@ export class RandomVideoChatApp {
         this.sounds = new SoundService();
 
         this.signaling = new SignalingService(this.socket);
-        this.chat = new ChatService({ el: this.el, signaling: this.signaling });
+        this.chat = new ChatService({
+            el: this.el,
+            signaling: this.signaling,
+            onIncoming: () => this.sounds.play('message'),
+        });
         this.webrtc = new WebRtcManager({
             state: this.state,
             el: this.el,

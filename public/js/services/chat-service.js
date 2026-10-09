@@ -1,8 +1,9 @@
 const MAX_LENGTH = 500;
 
 export class ChatService {
-    constructor({ el, signaling }) {
+    constructor({ el, signaling, onIncoming = () => {} }) {
         this.el = el;
+        this.onIncoming = onIncoming;
         this.signaling = signaling;
         this.active = false;
         this.unread = false;
@@ -74,6 +75,7 @@ export class ChatService {
         }
 
         this.append(text.slice(0, MAX_LENGTH), 'partner');
+        this.onIncoming();
         if (this.el.chatPanel.hidden) {
             this.setUnread(true);
         }

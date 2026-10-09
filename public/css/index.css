@@ -1038,9 +1038,26 @@ body {
 }
 
 @media (max-width: 720px) {
+    /* Full-screen sheet: stays inside the viewport and keeps the input usable with the on-screen keyboard */
     .chat-panel {
-        right: 10px;
-        bottom: 130px;
+        inset: 0;
+        width: auto;
+        height: 100dvh;
+        border: 0;
+        border-radius: 0;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+            env(safe-area-inset-left);
+    }
+
+    /* 16px+ stops iOS Safari from zooming the page when the input is focused */
+    .chat-form input {
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .chat-message {
+        max-width: 85%;
+        font-size: 0.95rem;
     }
 
     .app-shell {
@@ -1078,7 +1095,7 @@ body {
     }
 
     .control-bar {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         gap: 10px;
         padding: 12px 2px;
     }
@@ -1095,17 +1112,31 @@ body {
     }
 
     .call-controls {
-        justify-content: flex-start;
-        gap: 10px;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    .match-controls {
+        justify-content: stretch;
+    }
+
+    .match-controls .pill-btn {
+        flex: 1;
+        justify-content: center;
     }
 
     .icon-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .end-btn {
         width: 48px;
         height: 48px;
     }
 
     .pill-btn {
-        height: 48px;
+        height: 46px;
         padding: 0 16px;
     }
 

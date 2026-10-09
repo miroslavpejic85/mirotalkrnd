@@ -8,6 +8,10 @@ const CUES = {
         { freq: 659.25, at: 0.11, dur: 0.18, gain: 0.12 },
         { freq: 783.99, at: 0.22, dur: 0.38, gain: 0.12 },
     ],
+    message: [
+        { freq: 880, at: 0, dur: 0.12, gain: 0.08 },
+        { freq: 1318.51, at: 0.08, dur: 0.22, gain: 0.08 },
+    ],
     left: [
         { freq: 523.25, at: 0, dur: 0.16, gain: 0.1 },
         { freq: 392, at: 0.12, dur: 0.3, gain: 0.1 },
