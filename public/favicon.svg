@@ -7,6 +7,8 @@
   </defs>
   <rect width="64" height="64" rx="14" fill="#0f1522"/>
   <rect x="5" y="5" width="54" height="54" rx="11" fill="url(#bg)" opacity="0.16"/>
-  <path d="M18 24c0-3.3 2.7-6 6-6h16c3.3 0 6 2.7 6 6v2h-6v-1c0-.6-.4-1-1-1H25c-.6 0-1 .4-1 1v13c0 .6.4 1 1 1h14c.6 0 1-.4 1-1v-1h6v2c0 3.3-2.7 6-6 6H24c-3.3 0-6-2.7-6-6V24Z" fill="#eef3ff"/>
-  <path d="M33 27l9 5-9 5v-3h-8v-4h8v-3Z" fill="#eef3ff"/>
+  <g transform="translate(8 8) scale(1.5)" fill="none" stroke="#eef3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 5h10a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6h-2"/>
+    <path d="M17 11H10a6 6 0 0 0-6 6v2a6 6 0 0 0 6 6h1v3l5-3h1a6 6 0 0 0 6-6v-2a6 6 0 0 0-6-6Z"/>
+  </g>
 </svg>
