@@ -55,6 +55,8 @@ export class RandomVideoChatApp {
             chatTyping: document.getElementById('chatTyping'),
             chatForm: document.getElementById('chatForm'),
             chatInput: document.getElementById('chatInput'),
+            ageModal: document.getElementById('ageModal'),
+            ageConfirmBtn: document.getElementById('ageConfirmBtn'),
             reportModal: document.getElementById('reportModal'),
             reportCancelBtn: document.getElementById('reportCancelBtn'),
             reportConfirmBtn: document.getElementById('reportConfirmBtn'),
@@ -524,7 +526,19 @@ export class RandomVideoChatApp {
             }
         });
 
+        this.el.ageConfirmBtn.addEventListener('click', () => {
+            localStorage.setItem('ageConfirmed', '1');
+            this.el.ageModal.hidden = true;
+            this.el.startBtn.click();
+        });
+
         this.el.startBtn.addEventListener('click', async () => {
+            if (localStorage.getItem('ageConfirmed') !== '1') {
+                this.el.ageModal.hidden = false;
+                this.el.ageConfirmBtn.focus();
+                return;
+            }
+
             try {
                 await this.startMatching();
                 this.setSettingsPanelVisible(false);

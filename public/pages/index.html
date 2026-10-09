@@ -288,6 +288,29 @@
             </p>
 
             <div
+                id="ageModal"
+                class="capacity-modal"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="ageModalTitle"
+                aria-describedby="ageModalText"
+                hidden
+            >
+                <div class="capacity-modal-card modal-warning">
+                    <div class="modal-icon" aria-hidden="true"><i data-lucide="shield-alert"></i></div>
+                    <h2 id="ageModalTitle">Are you 18 or older?</h2>
+                    <p id="ageModalText">
+                        This service connects you with strangers and is for adults only. By continuing you confirm you
+                        are at least 18 and accept our <a href="/terms.html">Terms</a>.
+                    </p>
+                    <div class="modal-actions">
+                        <a id="ageDeclineBtn" class="btn pill-btn" href="https://www.google.com">Leave</a>
+                        <button id="ageConfirmBtn" class="btn pill-btn primary-btn" type="button">I'm 18+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div
                 id="reportModal"
                 class="capacity-modal"
                 role="alertdialog"
