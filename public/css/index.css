@@ -1097,50 +1097,61 @@ body {
     }
 
     .control-bar {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px 8px;
-        padding: 10px 2px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 8px 2px 12px;
     }
 
     .status-area {
-        grid-column: 1 / -1;
         justify-content: center;
         text-align: center;
         font-size: 0.8rem;
+    }
+
+    .status-area p {
+        max-width: none;
     }
 
     .status-area svg {
         display: none;
     }
 
-    /* Keep every control on one row: icon buttons shrink to fit the available width */
+    /* Icon buttons share one centered row and shrink to fit narrow screens */
     .call-controls {
         min-width: 0;
-        justify-content: space-between;
-        gap: 6px;
-    }
-
-    .match-controls {
-        gap: 6px;
+        justify-content: center;
+        gap: 8px;
     }
 
     .call-controls .icon-btn {
         flex: 1 1 0;
         width: auto;
         height: auto;
-        min-width: 28px;
-        max-width: 44px;
+        min-width: 34px;
+        max-width: 48px;
         aspect-ratio: 1;
     }
 
     .call-controls .end-btn {
-        max-width: 48px;
+        max-width: 52px;
     }
 
-    .pill-btn {
-        height: 40px;
+    /* Start/Next take the full row so the primary action is an easy tap target */
+    .match-controls {
+        justify-content: stretch;
+        gap: 8px;
+    }
+
+    .match-controls .pill-btn {
+        flex: 1 1 0;
+        justify-content: center;
+        height: 44px;
         padding: 0 12px;
         gap: 6px;
+    }
+
+    .match-controls .pill-btn[hidden] {
+        display: none;
     }
 
     .background-image-picker-row {
@@ -1153,9 +1164,47 @@ body {
     }
 }
 
+/* Tablet: status on its own row, call controls and match controls share the next one */
+@media (min-width: 721px) and (max-width: 1024px) {
+    .control-bar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px 16px;
+        padding: 14px 4px 18px;
+    }
+
+    .status-area {
+        grid-column: 1 / -1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .status-area p {
+        max-width: none;
+    }
+
+    .call-controls {
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .call-controls .icon-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .call-controls .end-btn {
+        width: 46px;
+        height: 46px;
+    }
+}
+
 @media (max-width: 380px) {
     .call-controls {
-        gap: 4px;
+        gap: 5px;
+    }
+
+    .call-controls .icon-btn {
+        min-width: 30px;
     }
 
     .call-controls .icon-btn svg {
