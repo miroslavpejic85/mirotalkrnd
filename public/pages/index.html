@@ -24,7 +24,23 @@
     <body>
         <div class="app-shell">
             <header class="top-bar">
-                <h1><img class="app-title-icon" src="/favicon.svg" alt="" aria-hidden="true" />{{APP_NAME}}</h1>
+                <h1>
+                    <svg
+                        class="app-title-icon"
+                        viewBox="0 0 32 32"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M12 5h10a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6h-2" />
+                        <path
+                            d="M17 11H10a6 6 0 0 0-6 6v2a6 6 0 0 0 6 6h1v3l5-3h1a6 6 0 0 0 6-6v-2a6 6 0 0 0-6-6Z"
+                        /></svg
+                    >{{APP_NAME}}
+                </h1>
                 <div class="top-bar-actions">
                     <span id="connectionBadge" class="connection-badge idle">Idle</span>
                     <button
@@ -75,7 +91,19 @@
 
             <main id="videoLayout" class="video-layout">
                 <section class="video-card local">
-                    <span class="video-header">You</span>
+                    <span class="video-header">
+                        You
+                        <span
+                            id="localMicStatus"
+                            class="media-pill"
+                            hidden
+                            title="Your microphone is off"
+                            aria-label="Your microphone is off"
+                        >
+                            <i data-lucide="mic-off" aria-hidden="true"></i>
+                            <span class="sr-only">Your microphone is off</span>
+                        </span>
+                    </span>
                     <video id="localVideo" autoplay playsinline muted></video>
                     <div id="localAvatarOverlay" class="local-avatar-overlay" hidden>
                         <div class="video-avatar">
@@ -89,19 +117,21 @@
                 </section>
 
                 <section class="video-card remote">
-                    <span class="video-header">Partner</span>
-                    <div id="remoteMediaStatus" class="remote-media-status" hidden>
-                        <span
-                            id="remoteMicStatus"
-                            class="remote-media-pill"
-                            hidden
-                            title="Partner microphone is off"
-                            aria-label="Partner microphone is off"
-                        >
-                            <i data-lucide="mic-off" aria-hidden="true"></i>
-                            <span class="sr-only">Partner microphone is off</span>
+                    <span class="video-header">
+                        Partner
+                        <span id="remoteMediaStatus" class="media-status" hidden>
+                            <span
+                                id="remoteMicStatus"
+                                class="media-pill"
+                                hidden
+                                title="Partner microphone is off"
+                                aria-label="Partner microphone is off"
+                            >
+                                <i data-lucide="mic-off" aria-hidden="true"></i>
+                                <span class="sr-only">Partner microphone is off</span>
+                            </span>
                         </span>
-                    </div>
+                    </span>
                     <video id="remoteVideo" autoplay playsinline></video>
                     <div id="remoteAvatarOverlay" class="remote-avatar-overlay" hidden>
                         <div class="video-avatar">
@@ -112,9 +142,15 @@
                         </div>
                         <span>Camera is off</span>
                     </div>
-                    <div class="video-placeholder" id="remotePlaceholder">
+                    <div class="video-placeholder" id="remotePlaceholder" data-mode="idle">
                         <span class="video-spinner" aria-hidden="true"></span>
-                        <span id="remotePlaceholderText">Waiting for partner...</span>
+                        <span class="match-check" aria-hidden="true"><i data-lucide="check"></i></span>
+                        <h2 id="remotePlaceholderTitle" class="placeholder-title" hidden></h2>
+                        <p id="remotePlaceholderText" class="placeholder-text">Waiting for partner...</p>
+                        <span id="remotePlaceholderPill" class="placeholder-pill" hidden>
+                            <span class="pill-dot" aria-hidden="true"></span>
+                            Waiting queue · 1-to-1 matching
+                        </span>
                     </div>
                 </section>
             </main>
@@ -150,7 +186,7 @@
                         title="End session"
                         disabled
                     >
-                        <i data-lucide="phone-off" aria-hidden="true"></i>
+                        <i data-lucide="phone" aria-hidden="true"></i>
                     </button>
                     <button
                         id="hideSelfBtn"
@@ -180,10 +216,6 @@
                         title="Report partner"
                     >
                         <i data-lucide="flag" aria-hidden="true"></i>
-                    </button>
-                    <!-- Chat is not supported yet -->
-                    <button id="chatBtn" class="btn icon-btn" type="button" hidden aria-label="Chat" title="Chat">
-                        <i data-lucide="message-square" aria-hidden="true"></i>
                     </button>
                 </div>
 

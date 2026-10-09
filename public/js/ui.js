@@ -76,21 +76,37 @@ export function setSelfPreviewLayout(el, hidden) {
     el.videoLayout.classList.toggle('self-preview-hidden', hidden);
 }
 
+const PLACEHOLDER_COPY = {
+    searching: {
+        title: 'Finding someone for you…',
+        text: "You're in the waiting queue. We'll match you in a moment.",
+    },
+    matched: {
+        title: 'Match found!',
+        text: 'Connecting you one-to-one…',
+    },
+    idle: { title: '', text: 'Waiting for partner...' },
+};
+
 export function updateRemoteMediaState(el, state, { hasPartner = false, hasRemoteStream = false } = {}) {
     const showMicOff = hasPartner && state.remotePeerMuted;
     const showCameraOff = hasPartner && state.remotePeerCameraOff;
     const showWaitingPlaceholder = !hasPartner || (!hasRemoteStream && !showCameraOff);
     const isSearchingForPartner = showWaitingPlaceholder && state.hasStartedMatching && state.inQueue;
-    const placeholderText = isSearchingForPartner ? 'Looking for a partner...' : 'Waiting for partner...';
+    const isMatched = showWaitingPlaceholder && hasPartner;
+    const mode = isSearchingForPartner ? 'searching' : isMatched ? 'matched' : 'idle';
+    const copy = PLACEHOLDER_COPY[mode];
 
     el.remoteMediaStatus.hidden = !showMicOff;
     el.remoteMicStatus.hidden = !showMicOff;
     el.remoteAvatarOverlay.hidden = !showCameraOff;
     el.remotePlaceholder.style.display = showWaitingPlaceholder ? 'grid' : 'none';
+    el.remotePlaceholder.dataset.mode = mode;
     el.remotePlaceholder.classList.toggle('is-searching', isSearchingForPartner);
-    if (el.remotePlaceholderText) {
-        el.remotePlaceholderText.textContent = placeholderText;
-    }
+    el.remotePlaceholderTitle.textContent = copy.title;
+    el.remotePlaceholderTitle.hidden = !copy.title;
+    el.remotePlaceholderText.textContent = copy.text;
+    el.remotePlaceholderPill.hidden = !isSearchingForPartner;
 }
 
 export function updatePrimaryActions(el, state, { searching = false } = {}) {
@@ -122,6 +138,7 @@ export function updateMediaButtons(el, state) {
     el.cameraBtn.innerHTML = state.isCameraOff ? getLucideSvg('video-off') : getLucideSvg('video');
     el.hideSelfBtn.innerHTML = state.selfPreviewHidden ? getLucideSvg('eye') : getLucideSvg('eye-off');
     renderLucideIcons();
+    el.localMicStatus.hidden = !state.isMuted;
     el.muteBtn.classList.toggle('off', state.isMuted);
     el.cameraBtn.classList.toggle('off', state.isCameraOff);
     el.hideSelfBtn.classList.toggle('off', state.selfPreviewHidden);

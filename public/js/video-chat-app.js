@@ -31,8 +31,11 @@ export class RandomVideoChatApp {
             remoteVideo: document.getElementById('remoteVideo'),
             remotePlaceholder: document.getElementById('remotePlaceholder'),
             remotePlaceholderText: document.getElementById('remotePlaceholderText'),
+            remotePlaceholderTitle: document.getElementById('remotePlaceholderTitle'),
+            remotePlaceholderPill: document.getElementById('remotePlaceholderPill'),
             remoteMediaStatus: document.getElementById('remoteMediaStatus'),
             remoteMicStatus: document.getElementById('remoteMicStatus'),
+            localMicStatus: document.getElementById('localMicStatus'),
             remoteAvatarOverlay: document.getElementById('remoteAvatarOverlay'),
             statusText: document.getElementById('statusText'),
             connectionBadge: document.getElementById('connectionBadge'),
@@ -126,7 +129,9 @@ export class RandomVideoChatApp {
         this.el.endSessionBtn.setAttribute('data-tippy-content', this.el.endSessionBtn.title);
         this.el.endSessionBtn.setAttribute('data-tippy-placement', 'top');
         this.el.remoteMicStatus.setAttribute('data-tippy-content', this.el.remoteMicStatus.getAttribute('aria-label'));
-        this.el.remoteMicStatus.setAttribute('data-tippy-placement', 'left');
+        this.el.remoteMicStatus.setAttribute('data-tippy-placement', 'bottom');
+        this.el.localMicStatus.setAttribute('data-tippy-content', this.el.localMicStatus.getAttribute('aria-label'));
+        this.el.localMicStatus.setAttribute('data-tippy-placement', 'bottom');
         initTooltips();
     }
 
@@ -284,7 +289,7 @@ export class RandomVideoChatApp {
         message,
         { mediaReady = Boolean(this.state.localStream), canSkip = this.state.hasStartedMatching } = {}
     ) {
-        this.setConnectionState('searching', 'Searching');
+        this.setConnectionState('searching', 'Searching…');
         this.setStatus(message);
         this.setControlsState({ mediaReady, searching: true, canSkip });
     }
@@ -657,8 +662,8 @@ export class RandomVideoChatApp {
         this.signaling.on('queue-update', () => {
             this.sounds.play('waiting');
             this.setQueueState(true);
-            this.setConnectionState('waiting', 'Waiting');
-            this.setStatus('Waiting in queue for an available partner...');
+            this.setConnectionState('waiting', 'Searching…');
+            this.setStatus('Waiting for a partner…\nHang tight, it only takes a moment.');
             this.setControlsState({ mediaReady: Boolean(this.state.localStream), searching: true });
         });
 
@@ -668,8 +673,8 @@ export class RandomVideoChatApp {
                 this.setReportModalVisible(false);
                 this.setCanReport(true);
                 this.setQueueState(false);
-                this.setConnectionState('connected', 'Connected');
-                this.setStatus('Connected! Say hi 👋 (if no sound, tap once)');
+                this.setConnectionState('connected', 'Matched');
+                this.setStatus('Partner found!\nStarting your conversation…');
                 this.setControlsState({ mediaReady: true, searching: false, canSkip: true });
 
                 if (!this.state.peerConnection) {
