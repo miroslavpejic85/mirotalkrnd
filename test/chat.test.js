@@ -72,4 +72,17 @@ describe('chat relay', () => {
 
         assert.equal(eventsNamed(b, 'chat-message').length, 0);
     });
+
+    test('relays typing state to the partner and ignores malformed payloads', async () => {
+        await match();
+
+        a.emit('chat-typing', { typing: true });
+        a.emit('chat-typing', { typing: 'yes' });
+        a.emit('chat-typing');
+        a.emit('chat-typing', { typing: false });
+        await waitFor(() => eventsNamed(b, 'chat-typing').length === 2);
+
+        assert.deepEqual(eventsNamed(b, 'chat-typing'), [{ typing: true }, { typing: false }]);
+        assert.equal(eventsNamed(a, 'chat-typing').length, 0);
+    });
 });

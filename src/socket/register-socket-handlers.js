@@ -2,6 +2,7 @@ const { yellow } = require('./moderation-service');
 
 const CHAT_MAX_LENGTH = 500;
 const CHAT_RATE_LIMIT_PER_10S = 10;
+const CHAT_TYPING_RATE_LIMIT_PER_10S = 20;
 
 function normalizeIp(ip) {
     if (!ip) {
@@ -54,6 +55,7 @@ function registerSocketHandlers({
     const socketsByIp = new Map();
     const skipRateWindowsBySocket = new Map();
     const chatRateWindowsBySocket = new Map();
+    const chatTypingRateWindowsBySocket = new Map();
     const { maxActiveUsers, maxConnectionsPerIp, skipRateLimitPer10s } = limits;
 
     function safeHandler(eventName, handler) {
@@ -123,6 +125,7 @@ function registerSocketHandlers({
     function clearRateLimits(socketId) {
         skipRateWindowsBySocket.delete(socketId);
         chatRateWindowsBySocket.delete(socketId);
+        chatTypingRateWindowsBySocket.delete(socketId);
     }
 
     function logConnectedUsers(eventLabel, socketId, reason, ip) {
@@ -301,6 +304,25 @@ function registerSocketHandlers({
                     return;
                 }
                 io.to(partnerId).emit('chat-message', { text });
+            })
+        );
+
+        socket.on(
+            'chat-typing',
+            safeHandler('chat-typing', async (payload) => {
+                if (typeof payload?.typing !== 'boolean') {
+                    return;
+                }
+
+                if (isRateLimited(chatTypingRateWindowsBySocket, socket.id, CHAT_TYPING_RATE_LIMIT_PER_10S)) {
+                    return;
+                }
+
+                const partnerId = await matchmaking.getPartnerId(socket.id);
+                if (!partnerId) {
+                    return;
+                }
+                io.to(partnerId).emit('chat-typing', { typing: payload.typing });
             })
         );
 

@@ -1,4 +1,7 @@
 const MAX_LENGTH = 500;
+const TYPING_IDLE_MS = 2500;
+const TYPING_RESEND_MS = 2000;
+const TYPING_EXPIRE_MS = 4000;
 
 export class ChatService {
     constructor({ el, signaling, onIncoming = () => {} }) {
@@ -7,6 +10,10 @@ export class ChatService {
         this.signaling = signaling;
         this.active = false;
         this.unread = false;
+        this.typingSent = false;
+        this.typingSentAt = 0;
+        this.typingIdleTimer = null;
+        this.typingExpireTimer = null;
     }
 
     init() {
@@ -23,7 +30,9 @@ export class ChatService {
                 this.el.chatBtn.focus();
             }
         });
+        this.el.chatInput.addEventListener('input', () => this.notifyTyping());
         this.signaling.on('chat-message', ({ text } = {}) => this.receive(text));
+        this.signaling.on('chat-typing', ({ typing } = {}) => this.setPartnerTyping(this.active && typing === true));
         this.endSession();
     }
 
@@ -36,6 +45,8 @@ export class ChatService {
 
     endSession() {
         this.active = false;
+        this.stopTyping(false);
+        this.setPartnerTyping(false);
         this.setPanelVisible(false);
         this.el.chatMessages.replaceChildren();
         this.el.chatInput.value = '';
@@ -67,6 +78,42 @@ export class ChatService {
         this.signaling.emitChatMessage(text);
         this.append(text, 'me');
         this.el.chatInput.value = '';
+        this.stopTyping(false);
+    }
+
+    // Typing state is only a hint for the partner: throttled while typing and cleared when idle or sent.
+    notifyTyping() {
+        if (!this.active || !this.el.chatInput.value.trim()) {
+            this.stopTyping(true);
+            return;
+        }
+
+        const now = Date.now();
+        if (!this.typingSent || now - this.typingSentAt >= TYPING_RESEND_MS) {
+            this.typingSent = true;
+            this.typingSentAt = now;
+            this.signaling.emitChatTyping(true);
+        }
+        clearTimeout(this.typingIdleTimer);
+        this.typingIdleTimer = setTimeout(() => this.stopTyping(true), TYPING_IDLE_MS);
+    }
+
+    stopTyping(notify) {
+        clearTimeout(this.typingIdleTimer);
+        if (this.typingSent && notify && this.active) {
+            this.signaling.emitChatTyping(false);
+        }
+        this.typingSent = false;
+    }
+
+    setPartnerTyping(typing) {
+        clearTimeout(this.typingExpireTimer);
+        this.el.chatTyping.hidden = !typing;
+        if (typing) {
+            // Safety net in case the "stopped typing" event is lost.
+            this.typingExpireTimer = setTimeout(() => this.setPartnerTyping(false), TYPING_EXPIRE_MS);
+            this.scrollToEnd();
+        }
     }
 
     receive(text) {
@@ -74,6 +121,7 @@ export class ChatService {
             return;
         }
 
+        this.setPartnerTyping(false);
         this.append(text.slice(0, MAX_LENGTH), 'partner');
         this.onIncoming();
         if (this.el.chatPanel.hidden) {
@@ -84,12 +132,21 @@ export class ChatService {
     append(text, author) {
         const item = document.createElement('li');
         item.className = `chat-message ${author}`;
-        item.textContent = text;
+
+        const body = document.createElement('span');
+        body.className = 'chat-message-text';
+        body.textContent = text;
+
+        const time = document.createElement('time');
+        time.className = 'chat-message-time';
+        time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+        item.append(body, time);
         this.el.chatMessages.append(item);
         this.scrollToEnd();
     }
 
     scrollToEnd() {
-        this.el.chatMessages.scrollTop = this.el.chatMessages.scrollHeight;
+        this.el.chatScroll.scrollTop = this.el.chatScroll.scrollHeight;
     }
 }

@@ -36,6 +36,10 @@ export class SignalingService {
         this.socket.emit('chat-message', { text });
     }
 
+    emitChatTyping(typing) {
+        this.socket.emit('chat-typing', { typing });
+    }
+
     emitMediaStateUpdate({ isMuted, isCameraOff }) {
         this.socket.emit('media-state-update', { isMuted, isCameraOff });
     }

@@ -18,6 +18,7 @@ const EVENTS = [
     'webrtc-offer',
     'peer-media-state',
     'chat-message',
+    'chat-typing',
     'server-notice',
     'banned',
 ];
