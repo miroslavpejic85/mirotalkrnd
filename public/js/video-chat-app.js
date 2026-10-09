@@ -507,6 +507,21 @@ export class RandomVideoChatApp {
     }
 
     bindDomEvents() {
+        // Release the server slot as soon as the user leaves the page (navigation, tab close, bfcache).
+        window.addEventListener('pagehide', () => {
+            if (this.socket.connected) {
+                this.state.userEndedSession = true;
+                this.socket.disconnect();
+            }
+        });
+
+        // A page restored from the back/forward cache has a dead session, so start fresh.
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
         this.el.startBtn.addEventListener('click', async () => {
             try {
                 await this.startMatching();
