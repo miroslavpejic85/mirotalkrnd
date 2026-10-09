@@ -32,6 +32,10 @@ export class SignalingService {
         this.socket.emit('webrtc-ice-candidate', { candidate });
     }
 
+    emitChatMessage(text) {
+        this.socket.emit('chat-message', { text });
+    }
+
     emitMediaStateUpdate({ isMuted, isCameraOff }) {
         this.socket.emit('media-state-update', { isMuted, isCameraOff });
     }

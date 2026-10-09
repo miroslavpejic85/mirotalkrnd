@@ -1,5 +1,8 @@
 const { yellow } = require('./moderation-service');
 
+const CHAT_MAX_LENGTH = 500;
+const CHAT_RATE_LIMIT_PER_10S = 10;
+
 function normalizeIp(ip) {
     if (!ip) {
         return 'unknown';
@@ -50,6 +53,7 @@ function registerSocketHandlers({
 }) {
     const socketsByIp = new Map();
     const skipRateWindowsBySocket = new Map();
+    const chatRateWindowsBySocket = new Map();
     const { maxActiveUsers, maxConnectionsPerIp, skipRateLimitPer10s } = limits;
 
     function safeHandler(eventName, handler) {
@@ -90,21 +94,21 @@ function registerSocketHandlers({
         return socketIds?.size ?? 0;
     }
 
-    function isSkipRateLimited(socketId) {
-        if (!skipRateLimitPer10s) {
+    function isRateLimited(windowsBySocket, socketId, limit) {
+        if (!limit) {
             return false;
         }
 
         const now = Date.now();
         const windowMs = 10_000;
-        const currentWindow = skipRateWindowsBySocket.get(socketId);
+        const currentWindow = windowsBySocket.get(socketId);
 
         if (!currentWindow || now - currentWindow.windowStartMs >= windowMs) {
-            skipRateWindowsBySocket.set(socketId, { windowStartMs: now, count: 1 });
+            windowsBySocket.set(socketId, { windowStartMs: now, count: 1 });
             return false;
         }
 
-        if (currentWindow.count >= skipRateLimitPer10s) {
+        if (currentWindow.count >= limit) {
             return true;
         }
 
@@ -112,8 +116,13 @@ function registerSocketHandlers({
         return false;
     }
 
-    function clearSkipRateLimit(socketId) {
+    function isSkipRateLimited(socketId) {
+        return isRateLimited(skipRateWindowsBySocket, socketId, skipRateLimitPer10s);
+    }
+
+    function clearRateLimits(socketId) {
         skipRateWindowsBySocket.delete(socketId);
+        chatRateWindowsBySocket.delete(socketId);
     }
 
     function logConnectedUsers(eventLabel, socketId, reason, ip) {
@@ -272,6 +281,30 @@ function registerSocketHandlers({
         );
 
         socket.on(
+            'chat-message',
+            safeHandler('chat-message', async (payload) => {
+                const text = typeof payload?.text === 'string' ? payload.text.trim() : '';
+                if (!text || text.length > CHAT_MAX_LENGTH) {
+                    return;
+                }
+
+                if (isRateLimited(chatRateWindowsBySocket, socket.id, CHAT_RATE_LIMIT_PER_10S)) {
+                    socket.emit('server-notice', {
+                        code: 'CHAT_RATE_LIMITED',
+                        message: 'You are sending messages too quickly. Please slow down.',
+                    });
+                    return;
+                }
+
+                const partnerId = await matchmaking.getPartnerId(socket.id);
+                if (!partnerId) {
+                    return;
+                }
+                io.to(partnerId).emit('chat-message', { text });
+            })
+        );
+
+        socket.on(
             'media-state-update',
             safeHandler('media-state-update', async (payload) => {
                 if (typeof payload?.isMuted !== 'boolean' || typeof payload?.isCameraOff !== 'boolean') {
@@ -302,7 +335,7 @@ function registerSocketHandlers({
         socket.on(
             'disconnect',
             safeHandler('disconnect', async (reason) => {
-                clearSkipRateLimit(socket.id);
+                clearRateLimits(socket.id);
                 untrackSocketForIp(socket.id, clientIp);
                 logConnectedUsers('disconnected', socket.id, reason, clientIp);
 

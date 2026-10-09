@@ -14,6 +14,7 @@ import {
     updateMediaButtons,
 } from './ui.js';
 import { loadRtcConfig } from './services/config-service.js';
+import { ChatService } from './services/chat-service.js';
 import { MediaManager } from './services/media-manager.js';
 import { SignalingService } from './services/signaling-service.js';
 import { SoundService } from './services/sound-service.js';
@@ -46,6 +47,12 @@ export class RandomVideoChatApp {
             bannedModal: document.getElementById('bannedModal'),
             bannedMessage: document.getElementById('bannedMessage'),
             reportBtn: document.getElementById('reportBtn'),
+            chatBtn: document.getElementById('chatBtn'),
+            chatPanel: document.getElementById('chatPanel'),
+            chatCloseBtn: document.getElementById('chatCloseBtn'),
+            chatMessages: document.getElementById('chatMessages'),
+            chatForm: document.getElementById('chatForm'),
+            chatInput: document.getElementById('chatInput'),
             reportModal: document.getElementById('reportModal'),
             reportCancelBtn: document.getElementById('reportCancelBtn'),
             reportConfirmBtn: document.getElementById('reportConfirmBtn'),
@@ -73,6 +80,7 @@ export class RandomVideoChatApp {
         this.sounds = new SoundService();
 
         this.signaling = new SignalingService(this.socket);
+        this.chat = new ChatService({ el: this.el, signaling: this.signaling });
         this.webrtc = new WebRtcManager({
             state: this.state,
             el: this.el,
@@ -92,6 +100,7 @@ export class RandomVideoChatApp {
     }
 
     init() {
+        this.chat.init();
         this.bindDomEvents();
         this.bindSocketEvents();
         this.bindMediaDeviceEvents();
@@ -219,6 +228,7 @@ export class RandomVideoChatApp {
     showBanned(expiresAt) {
         this.state.isBanned = true;
         this.webrtc.cleanupPeerConnection();
+        this.chat.endSession();
         this.media.stopLocalMedia();
         this.setStartedMatching(false);
         this.setQueueState(false);
@@ -312,6 +322,7 @@ export class RandomVideoChatApp {
 
         if (isAtCapacity) {
             this.webrtc.cleanupPeerConnection();
+            this.chat.endSession();
             this.setStartedMatching(false);
             this.setQueueState(false);
             this.setConnectionState('error', 'Full');
@@ -364,8 +375,8 @@ export class RandomVideoChatApp {
             return;
         }
 
-        if (notice.code === 'SKIP_RATE_LIMITED') {
-            this.setStatus(notice.message || 'You are skipping too quickly. Please wait and try again.');
+        if (notice.code === 'SKIP_RATE_LIMITED' || notice.code === 'CHAT_RATE_LIMITED') {
+            this.setStatus(notice.message || 'You are doing that too quickly. Please wait and try again.');
         }
     }
 
@@ -446,6 +457,7 @@ export class RandomVideoChatApp {
         await loadRtcConfig(this.state);
         await this.media.ensureLocalMedia();
         this.webrtc.cleanupPeerConnection();
+        this.chat.endSession();
         this.webrtc.createPeerConnection();
         this.setStartedMatching(true);
         this.setQueueState(true);
@@ -461,6 +473,8 @@ export class RandomVideoChatApp {
         this.state.userEndedSession = true;
 
         this.webrtc.cleanupPeerConnection();
+
+        this.chat.endSession();
         this.media.stopLocalMedia();
         this.media.setDeviceSelectPlaceholders();
 
@@ -546,6 +560,7 @@ export class RandomVideoChatApp {
             try {
                 await this.media.ensureLocalMedia();
                 this.webrtc.cleanupPeerConnection();
+                this.chat.endSession();
                 this.webrtc.createPeerConnection();
                 this.setQueueState(true);
                 this.setOnboardingVisible(false);
@@ -672,6 +687,7 @@ export class RandomVideoChatApp {
                 this.sounds.play('connected');
                 this.setReportModalVisible(false);
                 this.setCanReport(true);
+                this.chat.startSession();
                 this.setQueueState(false);
                 this.setConnectionState('connected', 'Matched');
                 this.setStatus('Partner found!\nStarting your conversation…');
@@ -733,6 +749,7 @@ export class RandomVideoChatApp {
         this.signaling.on('partner-disconnected', ({ reason }) => {
             this.sounds.play('left');
             this.webrtc.cleanupPeerConnection();
+            this.chat.endSession();
             this.setQueueState(true);
 
             if (reason === 'partner-skipped') {
@@ -765,6 +782,7 @@ export class RandomVideoChatApp {
 
             this.setCanReport(false);
             this.webrtc.cleanupPeerConnection();
+            this.chat.endSession();
             this.setQueueState(false);
             this.setConnectionState('reconnecting', 'Reconnecting');
             this.setStatus('Disconnected from server. Reconnecting...');

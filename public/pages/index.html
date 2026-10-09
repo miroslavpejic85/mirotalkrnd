@@ -217,6 +217,18 @@
                     >
                         <i data-lucide="flag" aria-hidden="true"></i>
                     </button>
+                    <button
+                        id="chatBtn"
+                        class="btn icon-btn"
+                        type="button"
+                        disabled
+                        aria-label="Chat"
+                        aria-expanded="false"
+                        aria-controls="chatPanel"
+                        title="Chat"
+                    >
+                        <i data-lucide="message-square" aria-hidden="true"></i>
+                    </button>
                 </div>
 
                 <div class="match-controls">
@@ -241,6 +253,28 @@
                     </button>
                 </div>
             </section>
+
+            <aside id="chatPanel" class="chat-panel" aria-label="Chat" hidden>
+                <div class="chat-header">
+                    <h2>Chat</h2>
+                    <button id="chatCloseBtn" class="btn icon-btn ghost-btn" type="button" aria-label="Close chat">
+                        <i data-lucide="x" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <ol id="chatMessages" class="chat-messages" aria-live="polite"></ol>
+                <form id="chatForm" class="chat-form">
+                    <input
+                        id="chatInput"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Type a message…"
+                        aria-label="Message"
+                    />
+                    <button class="btn icon-btn primary-btn" type="submit" aria-label="Send message">
+                        <i data-lucide="send" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </aside>
 
             <footer class="app-footer">
                 <a href="/privacy.html">Privacy</a>

@@ -17,6 +17,7 @@ const EVENTS = [
     'partner-disconnected',
     'webrtc-offer',
     'peer-media-state',
+    'chat-message',
     'server-notice',
     'banned',
 ];
