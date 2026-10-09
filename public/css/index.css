@@ -109,6 +109,7 @@ body {
 
 .video-card.remote {
     background: radial-gradient(90% 80% at 50% 45%, #1a2133, #111826 70%);
+    container-type: size;
 }
 
 .offline-card {
@@ -207,12 +208,13 @@ body {
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 12px;
+    gap: clamp(6px, 3cqmin, 12px);
     z-index: 2;
     text-align: center;
-    padding: 18px;
+    padding: clamp(8px, 4cqmin, 18px);
+    overflow: hidden;
     color: var(--muted);
-    font-size: 0.86rem;
+    font-size: clamp(0.72rem, 3.2cqmin, 0.86rem);
 }
 
 .video-placeholder[data-mode='searching'] {
@@ -227,7 +229,7 @@ body {
 
 .placeholder-title {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: clamp(1rem, 6cqmin, 1.3rem);
     font-weight: 700;
     color: var(--text);
 }
@@ -235,16 +237,16 @@ body {
 .placeholder-text {
     margin: 0;
     max-width: 420px;
-    font-size: 0.88rem;
-    line-height: 1.45;
+    font-size: clamp(0.75rem, 3.4cqmin, 0.88rem);
+    line-height: 1.4;
 }
 
 .video-placeholder[data-mode='searching'] .placeholder-title {
-    margin-top: 14px;
+    margin-top: clamp(0px, 2cqmin, 14px);
 }
 
 .video-placeholder[data-mode='searching'] .placeholder-text {
-    margin-bottom: 10px;
+    margin-bottom: clamp(0px, 2cqmin, 10px);
 }
 
 .video-placeholder[data-mode='matched'] .placeholder-text {
@@ -255,12 +257,12 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 18px;
+    padding: clamp(5px, 2cqmin, 9px) clamp(12px, 4cqmin, 18px);
     border: 1px solid var(--border);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.03);
     color: var(--text);
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 3cqmin, 0.8rem);
 }
 
 .pill-dot {
@@ -272,8 +274,9 @@ body {
 
 .video-spinner {
     display: none;
-    width: 84px;
-    height: 84px;
+    width: clamp(36px, 20cqmin, 84px);
+    height: clamp(36px, 20cqmin, 84px);
+    flex-shrink: 0;
     border-radius: 999px;
     border: 3px solid rgba(156, 171, 199, 0.16);
     border-top-color: var(--primary);
@@ -286,8 +289,8 @@ body {
 
 .match-check {
     display: none;
-    width: 76px;
-    height: 76px;
+    width: clamp(36px, 18cqmin, 76px);
+    height: clamp(36px, 18cqmin, 76px);
     border: 3px solid var(--success);
     border-radius: 50%;
     background: rgba(34, 197, 94, 0.08);
@@ -1095,9 +1098,9 @@ body {
     }
 
     .control-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 12px 2px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 8px;
+        padding: 10px 2px;
     }
 
     .status-area {
@@ -1111,33 +1114,34 @@ body {
         display: none;
     }
 
+    /* Keep every control on one row: icon buttons shrink to fit the available width */
     .call-controls {
+        min-width: 0;
         justify-content: space-between;
         gap: 6px;
     }
 
     .match-controls {
-        justify-content: stretch;
+        gap: 6px;
     }
 
-    .match-controls .pill-btn {
-        flex: 1;
-        justify-content: center;
+    .call-controls .icon-btn {
+        flex: 1 1 0;
+        width: auto;
+        height: auto;
+        min-width: 28px;
+        max-width: 44px;
+        aspect-ratio: 1;
     }
 
-    .icon-btn {
-        width: 44px;
-        height: 44px;
-    }
-
-    .end-btn {
-        width: 48px;
-        height: 48px;
+    .call-controls .end-btn {
+        max-width: 48px;
     }
 
     .pill-btn {
-        height: 46px;
-        padding: 0 16px;
+        height: 40px;
+        padding: 0 12px;
+        gap: 6px;
     }
 
     .background-image-picker-row {
@@ -1152,12 +1156,12 @@ body {
 
 @media (max-width: 380px) {
     .call-controls {
-        gap: 6px;
+        gap: 4px;
     }
 
-    .icon-btn {
-        width: 42px;
-        height: 42px;
+    .call-controls .icon-btn svg {
+        width: 16px;
+        height: 16px;
     }
 }
 
