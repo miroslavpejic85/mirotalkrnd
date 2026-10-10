@@ -103,14 +103,14 @@ function defineScenarios(name, { createInstances, skip = false }) {
             assert.equal(eventsNamed(first, 'banned').length, 0);
         });
 
-        test('lets a user report the partner who just left', async () => {
+        test('does not allow reporting a partner after they leave', async () => {
             const offender = await clientOn(0, '10.0.3.1');
             const reporter = await clientOn(1, '10.0.3.2');
             await pair(offender, reporter);
 
             offender.disconnect();
             await waitFor(() => eventsNamed(reporter, 'partner-disconnected').length === 1);
-            assert.deepEqual(await report(reporter), { ok: true });
+            assert.deepEqual(await report(reporter), { ok: false, code: 'NO_PARTNER' });
         });
     });
 }
@@ -132,6 +132,30 @@ defineScenarios('moderation, two instances sharing Redis (set TEST_REDIS_URL to 
         ];
         return { instances, cleanup: () => Promise.all(instances.map((instance) => instance.close())) };
     },
+});
+
+test('clears report targets when a skipped pair has no replacement', async () => {
+    const instance = await createInstance({
+        moderation: MODERATION,
+        isTrustedProxy: trustAll,
+        skipAvoidSamePartner: true,
+    });
+    try {
+        const first = await instance.client({ ip: '10.0.3.3' });
+        const second = await instance.client({ ip: '10.0.3.4' });
+        await pair(first, second);
+
+        first.emit('skip-partner');
+        await waitFor(() => eventsNamed(second, 'partner-disconnected').length === 1);
+        await waitFor(
+            () => eventsNamed(first, 'queue-update').length > 0 && eventsNamed(second, 'queue-update').length > 0
+        );
+
+        assert.deepEqual(await report(first), { ok: false, code: 'NO_PARTNER' });
+        assert.deepEqual(await report(second), { ok: false, code: 'NO_PARTNER' });
+    } finally {
+        await instance.close();
+    }
 });
 
 describe('moderation disabled', () => {

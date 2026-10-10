@@ -139,6 +139,17 @@ function registerSocketHandlers({
         );
     }
 
+    // Ends the pair and drops both report targets, so nobody can report a partner they are no longer matched with.
+    // The own entry is always cleared, as a disconnect can race with the match bookkeeping.
+    async function unpairAndForget(socketId, reason) {
+        const partnerId = await matchmaking.unpair(socketId, reason);
+        await moderation?.forgetPartner(socketId);
+        if (partnerId) {
+            await moderation?.forgetPartner(partnerId);
+        }
+        return partnerId;
+    }
+
     if (moderation?.enabled) {
         io.use(async (socket, next) => {
             try {
@@ -222,7 +233,7 @@ function registerSocketHandlers({
         socket.on(
             'find-partner',
             safeHandler('find-partner', async () => {
-                await matchmaking.unpair(socket.id, 'partner-skipped');
+                await unpairAndForget(socket.id, 'partner-skipped');
                 await matchmaking.findPartnerFor(socket.id);
             })
         );
@@ -240,7 +251,7 @@ function registerSocketHandlers({
                     return;
                 }
 
-                const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-skipped');
+                const previousPartnerId = await unpairAndForget(socket.id, 'partner-skipped');
                 const excludeId = skipAvoidSamePartner ? previousPartnerId : null;
                 await matchmaking.findPartnerFor(socket.id, { excludeId });
 
@@ -362,9 +373,8 @@ function registerSocketHandlers({
                 logConnectedUsers('disconnected', socket.id, reason, clientIp);
 
                 await matchmaking.removeFromQueue(socket.id);
-                const previousPartnerId = await matchmaking.unpair(socket.id, 'partner-left');
+                const previousPartnerId = await unpairAndForget(socket.id, 'partner-left');
                 await matchmaking.deleteMediaStateForSocket(socket.id);
-                await moderation?.forgetPartner(socket.id);
 
                 if (previousPartnerId && (await matchmaking.socketExists(previousPartnerId))) {
                     await matchmaking.findPartnerFor(previousPartnerId);

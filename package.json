@@ -1,6 +1,6 @@
 {
     "name": "mirotalkrnd",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "Lightweight random peer-to-peer video chat with vanilla JS and Node.js",
     "main": "server.js",
     "type": "commonjs",

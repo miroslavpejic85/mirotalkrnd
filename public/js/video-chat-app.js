@@ -191,7 +191,6 @@ export class RandomVideoChatApp {
         setControlsState(this.el, this.state, mergedOptions);
     }
 
-    // Reporting stays available after a partner leaves or is skipped, until the next match replaces them.
     setCanReport(value) {
         this.state.canReport = value;
         if (!value) {
@@ -785,6 +784,7 @@ export class RandomVideoChatApp {
             this.sounds.play('left');
             this.webrtc.cleanupPeerConnection();
             this.chat.endSession();
+            this.setCanReport(false);
             this.setQueueState(true);
 
             if (reason === 'partner-skipped') {
@@ -818,7 +818,7 @@ export class RandomVideoChatApp {
             this.setCanReport(false);
             this.webrtc.cleanupPeerConnection();
             this.chat.endSession();
-            this.setQueueState(false);
+            this.setQueueState(this.state.hasStartedMatching);
             this.setConnectionState('reconnecting', 'Reconnecting');
             this.setStatus('Disconnected from server. Reconnecting...');
             this.setControlsState({ mediaReady: Boolean(this.state.localStream), searching: true });
@@ -834,11 +834,17 @@ export class RandomVideoChatApp {
             if (this.state.serverAtCapacity) {
                 this.setServerAtCapacity(false);
             }
-            if (!this.state.inQueue) {
-                this.setConnectionState('idle', 'Idle');
-            }
+
+            const mediaReady = Boolean(this.state.localStream);
             if (this.state.inQueue) {
+                this.setSearchingUi('Reconnected to server. Finding someone for you...', {
+                    mediaReady,
+                    canSkip: this.state.hasStartedMatching,
+                });
                 this.signaling.emitFindPartner();
+            } else {
+                this.setConnectionState('idle', 'Idle');
+                this.setControlsState({ mediaReady, searching: false, canSkip: false });
             }
         });
 
