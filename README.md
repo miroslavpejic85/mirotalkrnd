@@ -28,7 +28,7 @@
 - Mic/camera toggle + hide self preview
 - Device selection
 - Virtual background support (blur and image)
-- Sound cues for waiting, connected, and partner left (can be turned off in settings)
+- Sound cues for waiting, connected, incoming message, and partner left (can be turned off in settings)
 - Queue, capacity, and anti-spam limits
 - Text chat with your current partner (relayed through the server, not stored)
 - Report button with automatic temporary IP bans (configurable)
