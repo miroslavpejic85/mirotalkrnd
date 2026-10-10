@@ -483,6 +483,14 @@ body {
     gap: 16px;
 }
 
+.control-divider {
+    flex-shrink: 0;
+    align-self: center;
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+}
+
 .match-controls {
     display: flex;
     justify-content: flex-end;
@@ -800,6 +808,11 @@ body {
     align-items: center;
     justify-content: center;
     line-height: 0;
+}
+
+.icon-btn.end-btn {
+    width: 44px;
+    height: 44px;
 }
 
 .icon-btn.end-btn svg {
@@ -1282,8 +1295,8 @@ body {
         aspect-ratio: 1;
     }
 
-    .call-controls .end-btn {
-        max-width: 52px;
+    .control-divider {
+        display: none;
     }
 
     /* Start/Next take the full row so the primary action is an easy tap target */
@@ -1328,8 +1341,7 @@ body {
 
     .status-area {
         grid-column: 1 / -1;
-        justify-content: center;
-        text-align: center;
+        justify-content: flex-start;
     }
 
     .status-area p {
@@ -1344,11 +1356,6 @@ body {
     .call-controls .icon-btn {
         width: 44px;
         height: 44px;
-    }
-
-    .call-controls .end-btn {
-        width: 46px;
-        height: 46px;
     }
 }
 
