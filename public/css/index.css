@@ -1309,8 +1309,12 @@ body {
         align-items: stretch;
     }
 
+    /* Keep legal and safety links reachable on phones, in a compact single row */
     .app-footer {
-        display: none;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 0 max(8px, env(safe-area-inset-bottom));
+        font-size: 0.7rem;
     }
 }
 
