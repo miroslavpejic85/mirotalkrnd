@@ -474,6 +474,7 @@ export class RandomVideoChatApp {
     }
 
     endSession() {
+        this.sounds.play('ended');
         this.setSettingsPanelVisible(false);
         this.setCapacityModalVisible(false);
         this.state.serverAtCapacity = false;

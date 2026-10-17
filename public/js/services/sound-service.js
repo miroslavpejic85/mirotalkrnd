@@ -16,6 +16,11 @@ const CUES = {
         { freq: 523.25, at: 0, dur: 0.16, gain: 0.1 },
         { freq: 392, at: 0.12, dur: 0.3, gain: 0.1 },
     ],
+    ended: [
+        { freq: 659.25, at: 0, dur: 0.16, gain: 0.1 },
+        { freq: 523.25, at: 0.12, dur: 0.16, gain: 0.1 },
+        { freq: 392, at: 0.24, dur: 0.3, gain: 0.1 },
+    ],
 };
 
 export class SoundService {
