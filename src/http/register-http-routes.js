@@ -4,6 +4,7 @@ const express = require('express');
 const { escapeHtml } = require('./escape-html');
 const { buildPrivacyNotices } = require('./privacy-notices');
 const { buildUmamiScriptTag } = require('../monitoring/umami');
+const packageJson = require('../../package.json');
 
 const APP_NAME_PLACEHOLDER = '{{APP_NAME}}';
 const ABOUT_LINK_PLACEHOLDER = '{{ABOUT_LINK}}';
@@ -20,6 +21,9 @@ const ANALYTICS_SCRIPT_PLACEHOLDER = '{{ANALYTICS_SCRIPT}}';
 const PRIVACY_NOTICES_PLACEHOLDER = '{{PRIVACY_NOTICES}}';
 const REPORT_NOTICE_PLACEHOLDER = '{{REPORT_NOTICE}}';
 const REPORTING_ENABLED_PLACEHOLDER = '{{REPORTING_ENABLED}}';
+const APP_VERSION_PLACEHOLDER = '{{APP_VERSION}}';
+const APP_VERSION = packageJson.version ? `v${packageJson.version}` : '';
+
 function renderHtmlTemplate(staticDirPath, fileName, replacements, rawReplacements = {}) {
     const templatePath = path.join(staticDirPath, fileName);
     const template = fs.readFileSync(templatePath, 'utf8');
@@ -67,6 +71,7 @@ function registerHttpRoutes({
         // Empty keeps the Socket.IO default (long-polling, then WebSocket upgrade).
         [SOCKET_TRANSPORTS_PLACEHOLDER]: socketWebsocketOnly ? 'websocket' : '',
         [REPORTING_ENABLED_PLACEHOLDER]: String(reportingEnabled),
+        [APP_VERSION_PLACEHOLDER]: APP_VERSION,
     };
     const rawReplacements = {
         [ANALYTICS_SCRIPT_PLACEHOLDER]: buildUmamiScriptTag(umami),
