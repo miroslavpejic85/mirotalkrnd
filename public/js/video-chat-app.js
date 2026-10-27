@@ -14,6 +14,11 @@ import {
     updateMediaButtons,
 } from './ui.js';
 import { loadRtcConfig } from './services/config-service.js';
+import {
+    BACKGROUND_PRESETS,
+    getPreferredBackgroundPreset,
+    savePreferredBackgroundPreset,
+} from './background-presets.js';
 import { ChatService } from './services/chat-service.js';
 import { MediaManager } from './services/media-manager.js';
 import { SignalingService } from './services/signaling-service.js';
@@ -73,6 +78,7 @@ export class RandomVideoChatApp {
             microphoneSelect: document.getElementById('microphoneSelect'),
             backgroundModeSelect: document.getElementById('backgroundModeSelect'),
             backgroundImagePickerRow: document.getElementById('backgroundImagePickerRow'),
+            backgroundPresetList: document.getElementById('backgroundPresetList'),
             backgroundImageBtn: document.getElementById('backgroundImageBtn'),
             backgroundImageInput: document.getElementById('backgroundImageInput'),
             backgroundImageName: document.getElementById('backgroundImageName'),
@@ -114,6 +120,7 @@ export class RandomVideoChatApp {
         this.bindMediaDeviceEvents();
 
         this.media.setDeviceSelectPlaceholders();
+        this.renderBackgroundPresets();
         this.el.backgroundModeSelect.value = this.media.getBackgroundMode();
         this.syncBackgroundImagePickerUi();
         this.el.soundEffectsToggle.checked = this.sounds.isEnabled();
@@ -137,8 +144,8 @@ export class RandomVideoChatApp {
         this.el.hideSelfBtn.setAttribute('data-tippy-placement', 'top');
         this.el.settingsBtn.setAttribute('data-tippy-content', this.el.settingsBtn.title);
         this.el.settingsBtn.setAttribute('data-tippy-placement', 'bottom');
-        this.el.backgroundImageBtn.setAttribute('data-tippy-content', 'Choose background image');
-        this.el.backgroundImageBtn.setAttribute('data-tippy-placement', 'left');
+        this.el.backgroundImageBtn.setAttribute('data-tippy-content', 'Upload your own image');
+        this.el.backgroundImageBtn.setAttribute('data-tippy-placement', 'bottom');
         this.el.enableSoundBtn.setAttribute('data-tippy-content', this.el.enableSoundBtn.title);
         this.el.enableSoundBtn.setAttribute('data-tippy-placement', 'top');
         this.el.reportBtn.setAttribute('data-tippy-content', this.el.reportBtn.title);
@@ -168,10 +175,58 @@ export class RandomVideoChatApp {
         setSettingsPanelVisible(this.el, visible);
     }
 
+    renderBackgroundPresets() {
+        const buttons = BACKGROUND_PRESETS.map((preset) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'background-preset';
+            button.dataset.presetId = preset.id;
+            button.disabled = true;
+            button.setAttribute('aria-label', `${preset.name} background`);
+            button.setAttribute('aria-pressed', 'false');
+            button.setAttribute('data-tippy-content', preset.name);
+            button.setAttribute('data-tippy-placement', 'bottom');
+
+            const thumbnail = document.createElement('img');
+            thumbnail.src = preset.thumb;
+            thumbnail.alt = '';
+            thumbnail.width = 160;
+            thumbnail.height = 90;
+            thumbnail.loading = 'lazy';
+            thumbnail.decoding = 'async';
+            button.appendChild(thumbnail);
+
+            button.addEventListener('click', () => void this.selectBackgroundPreset(preset));
+            return button;
+        });
+        this.el.backgroundPresetList.prepend(...buttons);
+    }
+
+    async selectBackgroundPreset(preset) {
+        try {
+            const applied = await this.media.setBackgroundPreset(preset);
+            if (!applied) {
+                return;
+            }
+            savePreferredBackgroundPreset(preset.id);
+            this.setStatus(`Background set to ${preset.name}.`);
+        } catch (error) {
+            this.setStatus(error?.message || 'Unable to load background image.');
+        } finally {
+            this.syncBackgroundImagePickerUi();
+        }
+    }
+
     syncBackgroundImagePickerUi() {
         const isImageMode = this.el.backgroundModeSelect.value === 'image';
+        const imageName = this.media.getSelectedBackgroundImageName();
+        const presetId = this.media.getSelectedBackgroundPresetId();
         this.el.backgroundImagePickerRow.hidden = !isImageMode;
-        this.el.backgroundImageName.textContent = this.media.getSelectedBackgroundImageName() || 'No image selected';
+        this.el.backgroundImageName.textContent = imageName || 'No image selected';
+        this.el.backgroundPresetList.querySelectorAll('[data-preset-id]').forEach((button) => {
+            button.setAttribute('aria-pressed', String(button.dataset.presetId === presetId));
+        });
+        this.el.backgroundImageBtn.setAttribute('aria-pressed', String(Boolean(imageName) && !presetId));
     }
 
     setEnableSoundVisible(visible) {
@@ -676,10 +731,12 @@ export class RandomVideoChatApp {
             const mode = event.target.value;
             this.syncBackgroundImagePickerUi();
             try {
-                await this.media.setBackgroundMode(mode);
+                // Image mode applies the last used preset right away instead of waiting for a choice.
                 if (mode === 'image' && !this.media.getSelectedBackgroundImageName()) {
-                    this.setStatus('Choose a background image to apply image mode.');
+                    await this.media.setBackgroundPreset(getPreferredBackgroundPreset());
                 }
+                await this.media.setBackgroundMode(mode);
+                this.syncBackgroundImagePickerUi();
             } catch (error) {
                 this.setStatus(error?.message || 'Unable to update background mode.');
                 this.el.backgroundModeSelect.value = this.media.getBackgroundMode();
@@ -697,9 +754,11 @@ export class RandomVideoChatApp {
                 return;
             }
             try {
-                await this.media.setBackgroundImage(selectedFile);
+                const applied = await this.media.setBackgroundImage(selectedFile);
                 this.syncBackgroundImagePickerUi();
-                this.setStatus('Background image selected.');
+                if (applied) {
+                    this.setStatus('Background image selected.');
+                }
             } catch (error) {
                 this.setStatus(error?.message || 'Unable to load background image.');
             } finally {

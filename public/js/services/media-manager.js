@@ -12,6 +12,8 @@ export class MediaManager {
         this.backgroundEffects = null;
         this.backgroundMode = 'off';
         this.backgroundImage = null;
+        this.backgroundPresetId = '';
+        this.backgroundImageRequest = 0;
         // True while the camera is turned off and the physical device is released (LED off).
         this.cameraReleased = false;
         this.cameraOffSize = { width: 640, height: 480 };
@@ -429,11 +431,33 @@ export class MediaManager {
         if (!file) {
             throw new Error('No image selected');
         }
+        return this.applyBackgroundImage(() => this.loadImageFile(file), '');
+    }
 
-        this.backgroundImage = await this.loadImageFile(file);
-        if (this.backgroundMode === 'image' && this.rawLocalStream) {
+    async setBackgroundPreset(preset) {
+        return this.applyBackgroundImage(() => this.loadImageUrl(preset.src, preset.name), preset.id);
+    }
+
+    // Resolves false when a newer image selection superseded this one.
+    async applyBackgroundImage(load, presetId) {
+        const request = ++this.backgroundImageRequest;
+        const image = await load();
+        if (request !== this.backgroundImageRequest) {
+            return false;
+        }
+
+        this.backgroundImage = image;
+        this.backgroundPresetId = presetId;
+        if (this.backgroundMode !== 'image') {
+            return true;
+        }
+        if (this.backgroundEffects) {
+            // Swap the image on the running effect instead of rebuilding the whole pipeline.
+            await this.backgroundEffects.setMode('image', image);
+        } else if (this.rawLocalStream) {
             await this.setBackgroundMode('image');
         }
+        return true;
     }
 
     getBackgroundMode() {
@@ -442,6 +466,10 @@ export class MediaManager {
 
     getSelectedBackgroundImageName() {
         return this.backgroundImage?.dataset?.filename || '';
+    }
+
+    getSelectedBackgroundPresetId() {
+        return this.backgroundImage ? this.backgroundPresetId : '';
     }
 
     async createOutputForRaw(rawStream, mode) {
@@ -482,18 +510,22 @@ export class MediaManager {
         this.backgroundEffects = null;
     }
 
+    loadImageUrl(src, name) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => {
+                image.dataset.filename = name;
+                resolve(image);
+            };
+            image.onerror = () => reject(new Error('Unable to load background image'));
+            image.src = src;
+        });
+    }
+
     loadImageFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => {
-                const image = new Image();
-                image.onload = () => {
-                    image.dataset.filename = file.name;
-                    resolve(image);
-                };
-                image.onerror = () => reject(new Error('Unable to load background image'));
-                image.src = String(reader.result);
-            };
+            reader.onload = () => resolve(this.loadImageUrl(String(reader.result), file.name));
             reader.onerror = () => reject(new Error('Unable to read background image'));
             reader.readAsDataURL(file);
         });

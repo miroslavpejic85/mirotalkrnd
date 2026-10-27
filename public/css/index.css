@@ -743,20 +743,69 @@ body {
 }
 
 .background-image-picker-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: grid;
+    gap: 6px;
 }
 
 .background-image-picker-row[hidden] {
     display: none;
 }
 
-.background-image-picker-row .btn {
-    padding: 7px 10px;
+.background-preset-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.background-preset {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    overflow: hidden;
+    color: var(--muted);
+    background: var(--panel-soft);
+    border: 2px solid var(--border);
     border-radius: 8px;
-    font-size: 0.76rem;
-    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.background-preset img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.background-preset svg {
+    width: 18px;
+    height: 18px;
+}
+
+.background-preset:hover:not(:disabled) {
+    border-color: var(--muted);
+}
+
+.background-preset:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.background-preset:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.background-preset[aria-pressed='true'] {
+    border-color: var(--primary);
+}
+
+.background-preset:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .background-image-name {
@@ -1323,11 +1372,6 @@ body {
 
     .match-controls .pill-btn[hidden] {
         display: none;
-    }
-
-    .background-image-picker-row {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     /* Keep legal and safety links reachable on phones, in a compact single row */

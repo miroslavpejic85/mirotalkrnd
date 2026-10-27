@@ -175,6 +175,8 @@ export function setControlsState(
     el.cameraSelect.disabled = !mediaReady || state.switchingDevices;
     el.microphoneSelect.disabled = !mediaReady || state.switchingDevices;
     el.backgroundModeSelect.disabled = !mediaReady || state.switchingDevices;
-    el.backgroundImageBtn.disabled = !mediaReady || state.switchingDevices;
+    el.backgroundPresetList.querySelectorAll('.background-preset').forEach((button) => {
+        button.disabled = !mediaReady || state.switchingDevices;
+    });
     updatePrimaryActions(el, state, { searching });
 }

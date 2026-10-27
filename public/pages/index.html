@@ -58,7 +58,17 @@
                             </select>
                         </label>
                         <div id="backgroundImagePickerRow" class="background-image-picker-row" hidden>
-                            <button id="backgroundImageBtn" class="btn subtle-btn" type="button">Choose image…</button>
+                            <div id="backgroundPresetList" class="background-preset-list" aria-label="Background image">
+                                <button
+                                    id="backgroundImageBtn"
+                                    class="background-preset background-preset-upload"
+                                    type="button"
+                                    aria-label="Upload your own image"
+                                    title="Upload your own image"
+                                >
+                                    <i data-lucide="image-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
                             <span id="backgroundImageName" class="background-image-name">No image selected</span>
                             <input id="backgroundImageInput" type="file" accept="image/*" hidden />
                         </div>

@@ -27,7 +27,7 @@
 - Next match + end session
 - Mic/camera toggle + hide self preview
 - Device selection
-- Virtual background support (blur and image)
+- Virtual background support (blur, built-in image presets, or your own image)
 - Sound cues for waiting, connected, incoming message, and partner left (can be turned off in settings)
 - Queue, capacity, and anti-spam limits
 - Text chat with your current partner (relayed through the server, not stored)
