@@ -12,6 +12,9 @@ export class MediaManager {
         this.backgroundEffects = null;
         this.backgroundMode = 'off';
         this.backgroundImage = null;
+        // True while the camera is turned off and the physical device is released (LED off).
+        this.cameraReleased = false;
+        this.cameraOffSize = { width: 640, height: 480 };
     }
 
     setDeviceSelectPlaceholders() {
@@ -141,10 +144,17 @@ export class MediaManager {
         try {
             const previousRawStream = this.rawLocalStream;
             const previousOutputStream = this.state.localStream;
-            nextRawStream = await navigator.mediaDevices.getUserMedia(this.buildConstraints());
-            const nextPipeline = await this.createOutputForRaw(nextRawStream, this.backgroundMode);
-            nextOutputStream = nextPipeline.stream;
-            nextEffect = nextPipeline.effect;
+            const constraints = this.buildConstraints();
+            if (this.cameraReleased) {
+                // Keep the camera released: only switch the microphone, the new camera applies when turned back on.
+                nextRawStream = await navigator.mediaDevices.getUserMedia({ audio: constraints.audio });
+                nextOutputStream = new MediaStream([this.createCameraOffTrack(), ...nextRawStream.getAudioTracks()]);
+            } else {
+                nextRawStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const nextPipeline = await this.createOutputForRaw(nextRawStream, this.backgroundMode);
+                nextOutputStream = nextPipeline.stream;
+                nextEffect = nextPipeline.effect;
+            }
 
             if (this.replacePeerTracks) {
                 await this.replacePeerTracks(nextOutputStream);
@@ -188,6 +198,7 @@ export class MediaManager {
         }
         this.rawLocalStream = null;
         this.state.localStream = null;
+        this.cameraReleased = false;
         this.el.localVideo.srcObject = null;
     }
 
@@ -199,12 +210,156 @@ export class MediaManager {
         this.applyLocalTrackState();
     }
 
-    toggleCamera() {
-        if (!this.state.localStream) {
+    async toggleCamera() {
+        if (!this.state.localStream || this.state.switchingDevices) {
             return;
         }
-        this.state.isCameraOff = !this.state.isCameraOff;
+        if (!this.canReleaseCamera()) {
+            // Fallback: no way to build a placeholder track, so only disable the camera track.
+            this.state.isCameraOff = !this.state.isCameraOff;
+            this.applyLocalTrackState();
+            return;
+        }
+        if (this.state.isCameraOff) {
+            await this.turnCameraOn();
+        } else {
+            await this.turnCameraOff();
+        }
+    }
+
+    canReleaseCamera() {
+        return (
+            typeof HTMLCanvasElement !== 'undefined' && typeof HTMLCanvasElement.prototype.captureStream === 'function'
+        );
+    }
+
+    createCameraOffTrack() {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.cameraOffSize.width;
+        canvas.height = this.cameraOffSize.height;
+        canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
+        const [track] = canvas.captureStream(1).getVideoTracks();
+        track.enabled = false;
+        return track;
+    }
+
+    async turnCameraOff() {
+        // Blank the outgoing video immediately, then release the device so the camera LED turns off.
+        this.state.isCameraOff = true;
         this.applyLocalTrackState();
+
+        this.state.switchingDevices = true;
+        this.setControlsState({ mediaReady: true, searching: this.state.inQueue });
+
+        const previousRawStream = this.rawLocalStream;
+        const previousOutputStream = this.state.localStream;
+        const [cameraTrack] = previousRawStream.getVideoTracks();
+        const { width, height } = cameraTrack?.getSettings() || {};
+        if (width && height) {
+            this.cameraOffSize = { width, height };
+        }
+
+        const audioTracks = previousRawStream.getAudioTracks();
+        const placeholderTrack = this.createCameraOffTrack();
+        const nextOutputStream = new MediaStream([placeholderTrack, ...audioTracks]);
+        try {
+            if (this.replacePeerTracks) {
+                try {
+                    await this.replacePeerTracks(nextOutputStream);
+                } catch (error) {
+                    // Still release the camera: the peer just receives no video until the next replace.
+                    console.error('Unable to send camera-off placeholder:', error);
+                }
+            }
+
+            if (this.state.localStream !== previousOutputStream) {
+                placeholderTrack.stop();
+                return;
+            }
+
+            this.applyOutputPipeline({
+                rawStream: new MediaStream(audioTracks),
+                outputStream: nextOutputStream,
+                effect: null,
+            });
+            previousRawStream.getVideoTracks().forEach((track) => track.stop());
+            if (previousOutputStream !== previousRawStream) {
+                previousOutputStream.getVideoTracks().forEach((track) => track.stop());
+            }
+            this.cameraReleased = true;
+            this.applyLocalTrackState();
+        } finally {
+            this.state.switchingDevices = false;
+            this.setControlsState({ mediaReady: Boolean(this.state.localStream), searching: this.state.inQueue });
+        }
+    }
+
+    async requestCameraStream() {
+        const { video } = this.buildConstraints();
+        try {
+            return await navigator.mediaDevices.getUserMedia({ video });
+        } catch (error) {
+            // The previously selected camera may have been unplugged while turned off.
+            if (!this.state.selectedVideoInputId || !['OverconstrainedError', 'NotFoundError'].includes(error?.name)) {
+                throw error;
+            }
+            return navigator.mediaDevices.getUserMedia({ video: true });
+        }
+    }
+
+    async turnCameraOn() {
+        this.state.switchingDevices = true;
+        this.setControlsState({ mediaReady: true, searching: this.state.inQueue });
+
+        const previousRawStream = this.rawLocalStream;
+        const previousOutputStream = this.state.localStream;
+        const isStale = () => this.state.localStream !== previousOutputStream;
+        let cameraStream = null;
+        let nextOutputStream = null;
+        let nextEffect = null;
+        try {
+            cameraStream = await this.requestCameraStream();
+            if (isStale()) {
+                return;
+            }
+
+            const nextRawStream = new MediaStream([
+                ...cameraStream.getVideoTracks(),
+                ...previousRawStream.getAudioTracks(),
+            ]);
+            const nextPipeline = await this.createOutputForRaw(nextRawStream, this.backgroundMode);
+            nextOutputStream = nextPipeline.stream;
+            nextEffect = nextPipeline.effect;
+            if (isStale()) {
+                return;
+            }
+
+            if (this.replacePeerTracks) {
+                await this.replacePeerTracks(nextOutputStream);
+            }
+
+            this.applyOutputPipeline({ rawStream: nextRawStream, outputStream: nextOutputStream, effect: nextEffect });
+            cameraStream = null;
+            nextOutputStream = null;
+            nextEffect = null;
+
+            previousOutputStream.getVideoTracks().forEach((track) => track.stop());
+            this.cameraReleased = false;
+            this.state.isCameraOff = false;
+            const [videoTrack] = nextRawStream.getVideoTracks();
+            this.state.selectedVideoInputId = videoTrack?.getSettings().deviceId || this.state.selectedVideoInputId;
+            this.applyLocalTrackState();
+            await this.populateDeviceSelectors();
+        } catch (error) {
+            this.setStatus(`Unable to turn camera on${error?.message ? `: ${error.message}` : '.'}`);
+            console.error('Error turning camera on:', error);
+        } finally {
+            nextEffect?.stop(false);
+            cameraStream?.getTracks().forEach((track) => track.stop());
+            nextOutputStream?.getVideoTracks().forEach((track) => track.stop());
+            this.state.switchingDevices = false;
+            this.setControlsState({ mediaReady: Boolean(this.state.localStream), searching: this.state.inQueue });
+        }
     }
 
     async setBackgroundMode(mode) {
@@ -217,6 +372,15 @@ export class MediaManager {
         }
         if (!this.rawLocalStream) {
             this.backgroundMode = mode;
+            return;
+        }
+        if (this.cameraReleased) {
+            // Applied when the camera is turned back on, without waking the camera now.
+            if (mode !== 'off' && !BackgroundEffects.supported()) {
+                throw new Error('Background effects are not supported in this browser');
+            }
+            this.backgroundMode = mode;
+            this.setStatus(`Background ${mode === 'off' ? 'disabled' : `set to ${mode}`}.`);
             return;
         }
 

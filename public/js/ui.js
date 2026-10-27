@@ -169,7 +169,7 @@ export function setControlsState(
     el.nextBtn.hidden = !state.hasStartedMatching;
     el.nextBtn.disabled = !mediaReady || !canSkip;
     el.muteBtn.disabled = !mediaReady;
-    el.cameraBtn.disabled = !mediaReady;
+    el.cameraBtn.disabled = !mediaReady || state.switchingDevices;
     el.hideSelfBtn.disabled = !mediaReady;
     el.endSessionBtn.disabled = !canEndSession;
     el.cameraSelect.disabled = !mediaReady || state.switchingDevices;

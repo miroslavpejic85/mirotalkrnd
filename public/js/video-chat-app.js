@@ -630,8 +630,8 @@ export class RandomVideoChatApp {
             this.media.toggleMute();
             this.broadcastLocalMediaState();
         });
-        this.el.cameraBtn.addEventListener('click', () => {
-            this.media.toggleCamera();
+        this.el.cameraBtn.addEventListener('click', async () => {
+            await this.media.toggleCamera();
             this.broadcastLocalMediaState();
         });
         this.el.hideSelfBtn.addEventListener('click', () => {
