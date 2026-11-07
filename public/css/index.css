@@ -9,8 +9,6 @@
     --primary: #7c8cff;
     --success: #22c55e;
     --warning: #f5b544;
-    --cta: #facc15;
-    --cta-hover: #eab308;
     --danger: #ef4444;
 }
 
@@ -911,18 +909,40 @@ body {
 }
 
 .match-controls .pill-btn {
-    background: var(--cta);
-    border-color: transparent;
-    color: #0d121c;
+    font-weight: 700;
 }
 
-.match-controls .pill-btn:hover:not(:disabled) {
-    background: var(--cta-hover);
-    filter: none;
+.match-controls .pill-btn svg {
+    width: 17px;
+    height: 17px;
 }
 
-.match-controls .pill-btn:focus-visible {
-    outline-color: var(--cta);
+#startBtn svg {
+    fill: currentColor;
+}
+
+#nextBtn svg {
+    fill: currentColor;
+}
+
+#startBtn.primary-btn:not(:disabled) {
+    box-shadow: 0 0 0 0 rgba(124, 140, 255, 0.5);
+    animation: start-pulse 2.4s ease-out infinite;
+}
+
+@keyframes start-pulse {
+    70% {
+        box-shadow: 0 0 0 10px rgba(124, 140, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(124, 140, 255, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #startBtn.primary-btn:not(:disabled) {
+        animation: none;
+    }
 }
 
 .subtle-btn {
