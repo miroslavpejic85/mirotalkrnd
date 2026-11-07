@@ -9,6 +9,8 @@
     --primary: #7c8cff;
     --success: #22c55e;
     --warning: #f5b544;
+    --cta: #facc15;
+    --cta-hover: #eab308;
     --danger: #ef4444;
 }
 
@@ -906,6 +908,21 @@ body {
     background: var(--primary);
     border-color: transparent;
     color: #fff;
+}
+
+.match-controls .pill-btn {
+    background: var(--cta);
+    border-color: transparent;
+    color: #0d121c;
+}
+
+.match-controls .pill-btn:hover:not(:disabled) {
+    background: var(--cta-hover);
+    filter: none;
+}
+
+.match-controls .pill-btn:focus-visible {
+    outline-color: var(--cta);
 }
 
 .subtle-btn {
